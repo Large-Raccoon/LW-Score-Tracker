@@ -8,7 +8,7 @@ and KS (Kill Score). Screenshots may be taken automatically or imported from man
     - Minimum Version: Windows 10
 
 2. Powershell
-    - The bulk of this tool uses Powershell where version 5.1 is installed by default on Windws 10 and 11. However, Powershell 7 provides a superior experience and can be acquired from the link below if desired.
+    - The bulk of this tool uses Powershell where version 5.1 is installed by default on Windws 10 and 11. However, Powershell 7 provides a superior experience and can be acquired by installing via winget (see below for command)
     - Source: Install from terminal (open command prompt or PowerShell from the Start Menu)
     - Minimum Version: 5.1 (default in Windows 10 and 11)
     - Recommended Version: 7.5.2 (or greater)
