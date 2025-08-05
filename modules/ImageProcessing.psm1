@@ -28,7 +28,7 @@ $cv2 = Join-Path -Path $modules -ChildPath $script:Config.Core.Cv2Script
 
 # Ensure traineddata has been added to tessdata
 $TessPath = (Join-Path (Get-ProductExecutable -ProductName 'Tesseract-OCR' -PathOnly) 'tessdata')
-$TrainedData = (Get-ChildItem -Path "C:\Last War\Score Tracker\1.0\config\tessdata" -Filter '*.traineddata').Name
+$TrainedData = (Get-ChildItem -Path $TessdataSource -Filter '*.traineddata').Name
 
 ForEach ($File in $TrainedData) {
     $TessdataDestination = Join-Path $TessPath $File -EA SilentlyContinue
