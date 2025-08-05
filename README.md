@@ -84,12 +84,9 @@ Some work will be needed to get everything setup initially. After finishing setu
 6. config.json
     - Set your score requirements
         - From the same config folder in step 5, you will find "config.json". Open this with notepad or any plaintext editor of your choice.
-        - ```"VS_DailyMin": "7200000"```
-            - Define your daily VS score requirements here. If you have no daily VS requirements, set to "0".
-        - ```"VS_WeeklyMin": "0"```
-            - Define your weekly VS score requirements here. Leave at "0" if your alliance has daily VS requirements.
-        - ```"TD_WeeklyMin": "20000"```
-            - Define your weekly alliance tech donation requirements here.
+        - ```"VS_DailyMin": "7200000"``` - Define your daily VS score requirements here. If you have no daily VS requirements, set to "0".
+        - ```"VS_WeeklyMin": "0"``` - Define your weekly VS score requirements here. Leave at "0" if your alliance has daily VS requirements.
+        - ```"TD_WeeklyMin": "20000"``` - Define your weekly alliance tech donation requirements here.
 
   - Specify your languages
       - ```"Languages": "eng+kor"```
