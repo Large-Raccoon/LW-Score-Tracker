@@ -135,11 +135,11 @@ Some work will be needed to get everything setup initially. After finishing setu
 
 8. Run the Score Tracker script
 - In PowerShell, make sure you're still in the correct folder where you extracted this repository to.
-  - Example:
-  ```
-  cd "C:\Last War\Score Tracker\1.0"
-  ```
-- Now run the script with ONE of these example commands:
+    - Example:
+    ```
+    cd "C:\Last War\Score Tracker\1.0"
+    ```
+- Now run the script with ONE of these example commands. Remember to update your -PPS number if different:
     - Get VS Day 1 scores with 5 players per screenshot:
     ```
     .\LW-ScoreTracker.ps1 -Mode VS -Day 1 -PPS 5
@@ -161,3 +161,54 @@ Some work will be needed to get everything setup initially. After finishing setu
     - Open the "Logs" folder from wherever the Score Tracker is installed. Then open up "NameCorrection.log".
     - For ⚠️ entries, these were guesses made by the script. If it did not guess correctly, add the invalid name as an alias to your roster.csv.
     - For ❌ entries, the player was completely unreocognized. Make sure the player is in your roster.csv. Add the invalid name as an alias to your roster.csv if necessary.
+
+## Usage
+- Parameters
+    - -Mode
+        - Determines which scoreboard will be captured.
+        - -Mode VS // Alliance Duel
+        - -Mode TD // Tech Donations
+        - -Mode KS // Kill Score
+     
+    - -Day
+        - Specifies which days of VS scores are to be captured.
+        - Required when processing VS scores with daily score requirements.
+        - Not required for weekly score requirements.
+     
+    - -PPS
+        - Specifies how many players are clearly depicted (with rank number fully intact) in each scoreboard screenshot.
+        - Required when automatically collecting screenshots.
+        - Will attempt to automatically set when -NoBot is used.
+        - For best results, always specify your PPS.
+     
+    - -NoBot
+        - Script will proceed without automatic screenshot capture.
+        - If no images in the "import" folder, will use the last screenshots taken if available.
+        - Only supports running one set at a time if you are importing your own images via the "import" folder. That means only the screenshots from a single scoreboard should be added at any given time.
+
+- Examples
+    - Get VS scores from days 1-4 with automatic screenshot capture:
+    ```
+    .\LW-ScoreTracker.ps1 -Mode VS -Day 1,2,3,4 -PPS 5
+    ```
+    
+    - Get VS scores from days 1-4 with manually taken screenshots:
+    ```
+    .\LW-ScoreTracker.ps1 -Mode VS -Day 1,2,3,4 -PPS 5 -NoBot
+    ```
+    
+    - Get VS scores when your alliance has weekly score requirements with automatic screenshot capture:
+    ```
+    .\LW-ScoreTracker.ps1 -Mode VS -PPS 5
+    ```
+    
+    - Get weekly tech donation scores with automatic screenshot capture:
+    ```
+    .\LW-ScoreTracker.ps1 -Mode TD -PPS 5
+    ```
+    
+    - Get kill scores with automatic screenshot capture:
+    ```
+    .\LW-ScoreTracker.ps1 -Mode KS -PPS 5
+    ```
+
