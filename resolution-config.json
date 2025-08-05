@@ -1,0 +1,78 @@
+[
+	{
+	"Width": 720,
+    "Height": 1280,
+    "OffsetX": 140,
+    "OffsetY": -50,
+	"RankRow_W": 455,
+	"RankRow_H": 100,
+	"Player_W": 0,
+	"Player_H": 0,
+	"Score_W": 0,
+	"Score_H": 0
+	},
+	{
+    "Width": 1080,
+    "Height": 1920,
+    "OffsetX": 210,
+    "OffsetY": -75,
+	"RankRow_W": 685,
+	"RankRow_H": 145
+	},
+	{
+    "Width": 1080,
+    "Height": 2400,
+    "OffsetX": 210,
+    "OffsetY": -75,
+	"RankRow_W": 685,
+	"RankRow_H": 145
+	},
+	{
+    "Width": 1200,
+    "Height": 1920,
+    "OffsetX": 210,
+    "OffsetY": -75,
+	"RankRow_W": 685,
+	"RankRow_H": 150
+	},
+	{
+	"Width": 1290,
+    "Height": 2796,
+    "OffsetX": 255,
+    "OffsetY": -85,
+	"RankRow_W": 810,
+	"RankRow_H": 170
+	},
+	{
+    "Width": 1008,
+    "Height": 2244,
+    "OffsetX": 200,
+    "OffsetY": -65,
+	"RankRow_W": 625,
+	"RankRow_H": 125
+	},
+	{
+    "Width": 1668,
+    "Height": 2420,
+    "OffsetX": 267,
+    "OffsetY": -85,
+	"RankRow_W": 850,
+	"RankRow_H": 155
+	},
+	{
+    "Width": 1179,
+    "Height": 2556,
+    "OffsetX": 225,
+    "OffsetY": -75,
+	"RankRow_W": 750,
+	"RankRow_H": 145
+	},
+	{
+    "Width": 2352,
+    "Height": 1394,
+    "OffsetX": 148,
+    "OffsetY": -55,
+	"RankRow_W": 470,
+	"RankRow_H": 110
+	}
+]
