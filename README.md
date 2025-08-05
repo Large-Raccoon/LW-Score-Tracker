@@ -4,7 +4,7 @@ If you find this tool helpful, please consider making a donation buy buying me a
 
 # Last War Score Tracker
 Gets scoreboard data from screenshots and writes to text (csv) for use with Excel or Google Sheets. Supports VS (Alliance Duel), TD (Alliance Tech Donations), 
-and KS (Kill Score). Screenshots may be taken automatically or imported from manually taken screenshots.
+and KS (Kill Score). Screenshots may be taken automatically or imported manually.
 
 ## Prerequisites
 1. Microsoft Windows
