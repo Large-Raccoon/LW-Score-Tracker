@@ -52,7 +52,7 @@ and KS (Kill Score). Screenshots may be taken automatically or imported from man
 
 8. BlueStacks or physical Android device with USB debugging enabled
     - This is only required for automatic collection of screenshots. If you will be supplying screenshots taken manually, you may skip this.
-    - Ideal BlueStacks display settings: Portrait orientation at 1080x1920 resoolution with 240 DPI pixel density
+    - Ideal BlueStacks display settings: Portrait orientation at 1080x1920 resolution with 240 DPI pixel density
     - Enabling USB debugging in BlueStacks: https://support.bluestacks.com/hc/en-us/articles/23925869130381-How-to-enable-Android-Debug-Bridge-on-BlueStacks-5
     - Enabling USB debugging on physical Android device: https://developer.android.com/studio/debug/dev-options
     - Take note of the IP and port that will be used.
@@ -80,7 +80,7 @@ Some work will be needed to get everything setup initially. After finishing setu
     ```
 
 5. Populate your roster.csv with player names.
-    - Navigate to the config folder and open roster.csv with soemthing like Excel or with Google Sheets
+    - Navigate to the config folder and open roster.csv with something like Excel or with Google Sheets
     - In the first column under "Player", add all the player names from your alliance.
     - TIP: Copying and pasting from the game's PC client or BlueStacks makes this easier.
     - Save your updated roster.csv (make sure to keep it in the same config folder)
@@ -118,7 +118,7 @@ Some work will be needed to get everything setup initially. After finishing setu
     - ```"CertFile": "Add the filename of your .json or .p12 certificate here"```
           - Windows PowerShell 5.1 users will require a .p12 certificate. PowerShell 7+ users may use either certificate type.
     - ```"SpreadsheetID": "Add your spreadsheet ID here"```
-          - Look at the URL of your spreadsheet. The ID is betweem https://docs.google.com/spreadsheets/d/ and the /edit?gid= part of your URL.
+          - Look at the URL of your spreadsheet. The ID is between https://docs.google.com/spreadsheets/d/ and the /edit?gid= part of your URL.
     - ```"SheetName": "Add your sheet name here"```
           - Add the name of your sheet (from the name of the desired tab at the bottom of your spreadsheet)
     - ```VS, TD, and KS cells```
@@ -161,7 +161,7 @@ Some work will be needed to get everything setup initially. After finishing setu
 9. Confirm that player names are being reported correctly.
     - Open the "Logs" folder from wherever the Score Tracker is installed. Then open up "NameCorrection.log".
     - For ⚠️ entries, these were guesses made by the script. If it did not guess correctly, add the invalid name as an alias to your roster.csv.
-    - For ❌ entries, the player was completely unreocognized. Make sure the player is in your roster.csv. Add the invalid name as an alias to your roster.csv if necessary.
+    - For ❌ entries, the player was completely unrecognized. Make sure the player is in your roster.csv. Add the invalid name as an alias to your roster.csv if necessary.
 
 ## Usage
 - Parameters
