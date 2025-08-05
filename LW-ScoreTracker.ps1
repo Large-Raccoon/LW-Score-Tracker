@@ -136,7 +136,7 @@ $templates = "$PSScriptRoot\config\templates"
 $Reports = "$PSScriptRoot\reports"
 $preproc = "$PSScriptRoot\imgproc\preproc"
 $scaledtemplates = "$PSScriptRoot\imgproc\templates_scaled"
-$Logs = "$PSScriptRoot\Logs"
+$Logs = "$PSScriptRoot\logs"
 $import = "$PSScriptRoot\import"
 
 # --- Dynamic Configurations ---
@@ -164,7 +164,18 @@ Import-Module "$modules\JobCollection.psm1" -Force
 ## ------ 1: Prepare the local environment ------
 #####################################################################################
 
-# Informational header
+# Check if prerequisite folders exist. Create if not.
+if (!(Test-Path $screens -EA SilentlyContinue)) { New-Item -ItemType Directory -Path $screens | Out-Null }
+if (!(Test-Path "$screens\VS" -EA SilentlyContinue)) { New-Item -ItemType Directory -Path "$screens\VS" | Out-Null }
+if (!(Test-Path "$screens\TD" -EA SilentlyContinue)) { New-Item -ItemType Directory -Path "$screens\TD" | Out-Null }
+if (!(Test-Path "$screens\KS" -EA SilentlyContinue)) { New-Item -ItemType Directory -Path "$screens\KS" | Out-Null }
+if (!(Test-Path "$screens\Nav" -EA SilentlyContinue)) { New-Item -ItemType Directory -Path "$screens\Nav" | Out-Null }
+if (!(Test-Path $preproc -EA SilentlyContinue)) { New-Item -ItemType Directory -Path $preproc | Out-Null }
+if (!(Test-Path $logs -EA SilentlyContinue)) { New-Item -ItemType Directory -Path $logs | Out-Null }
+if (!(Test-Path $Reports -EA SilentlyContinue)) { New-Item -ItemType Directory -Path $Reports | Out-Null }
+if (!(Test-Path "$import\KS" -EA SilentlyContinue)) { New-Item -ItemType Directory -Path "$import\KS" | Out-Null }
+if (!(Test-Path "$import\TD" -EA SilentlyContinue)) { New-Item -ItemType Directory -Path "$import\TD" | Out-Null }
+if (!(Test-Path "$import\VS" -EA SilentlyContinue)) { New-Item -ItemType Directory -Path "$import\VS" | Out-Null }
 
 # Informational variables for the header
 if ($NoBot) { $ScreenshotSource = 'Manual\Existing' } else { $ScreenshotSource = 'Auto' }
@@ -229,16 +240,10 @@ if ($RosterData.Player.Count -eq 0) {
 # Wait before proceeding in case user decides to cancel
 Start-Sleep -Seconds 10
 
-# Check if prerequisite folders exist. Create if not.
-if (!(Test-Path "$screens\VS")) { New-Item -ItemType Directory -Path "$screens\VS" | Out-Null }
-if (!(Test-Path "$screens\TD")) { New-Item -ItemType Directory -Path "$screens\TD" | Out-Null }
-if (!(Test-Path "$screens\KS")) { New-Item -ItemType Directory -Path "$screens\KS" | Out-Null }
-if (!(Test-Path "$screens\Nav")) { New-Item -ItemType Directory -Path "$screens\Nav" | Out-Null }
-if (!(Test-Path "$preproc")) { New-Item -ItemType Directory -Path "$preproc" | Out-Null }
-
 # Delete old screenshots
-if (!($NoBot)) { Get-ChildItem -Path "$screens\*" -File -Recurse -EA SilentlyContinue |
-                Remove-Item -Force -EA SilentlyContinue }
+if (!($NoBot)) { 
+    Get-ChildItem -Path "$screens\*" -File -Recurse -EA SilentlyContinue | Remove-Item -Force -EA SilentlyContinue
+}
 
 # Preproc should always be cleared before generating new images.
 Remove-Item -Path "$preproc\*" -Recurse -Force -EA SilentlyContinue
