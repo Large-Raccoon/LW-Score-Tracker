@@ -4,7 +4,7 @@ If you find this tool helpful, please consider making a donation buy buying me a
 
 # Last War Score Tracker
 Gets scoreboard data from screenshots and writes to text (csv) for use with Excel or Google Sheets. Supports VS (Alliance Duel), TD (Alliance Tech Donations), 
-and KS (Kill Score). Screenshots may be taken automatically or imported manually.
+and KS (Kill Score). Screenshots may be taken automatically, manually (guided), or imported.
 
 ## Prerequisites
 1. Microsoft Windows
@@ -138,24 +138,28 @@ Some work will be needed to get everything setup initially. After finishing setu
 - In PowerShell, make sure you're still in the correct folder where you extracted this repository to.
     - Example:
     ```
-    cd "C:\Last War\Score Tracker\1.0"
+    cd "C:\Last War\LW-Score-Tracker-main"
     ```
 - Now run the script with ONE of these example commands. Remember to update your -PPS number if different:
     - Get VS Day 1 scores with 5 players per screenshot:
     ```
-    .\LW-ScoreTracker.ps1 -Mode VS -Day 1 -PPS 5
+    .\LW-ScoreTracker.ps1 -Mode VS -Day 1 -PPS 5 -Mode Auto
     ```
     - Get VS weekly score with 5 players per screenshot:
     ```
-    .\LW-ScoreTracker.ps1 -Mode VS -PPS 5
+    .\LW-ScoreTracker.ps1 -Mode VS -PPS 5 -Mode Auto
     ```
     - Get TD (Tech Donation) score with 5 players per screenshot:
     ```
-    .\LW-ScoreTracker.ps1 -Mode TD -PPS 5
+    .\LW-ScoreTracker.ps1 -Mode TD -PPS 5 -Mode Auto
     ```
-    - Get TD (Tech Donation) scores with manually provided screenshots.
+    - Get TD (Tech Donation) scores with screenshots you will manually take through the script.
     ```
-    .\LW-ScoreTracker.ps1 -Mode TD -PPS 5 -NoBot
+    .\LW-ScoreTracker.ps1 -Mode TD -PPS 5 -Mode Manual
+    ```
+    - Get TD (Tech Donation) scores with imported screenshots.
+    ```
+    .\LW-ScoreTracker.ps1 -Mode TD -PPS 5 -Mode Import
     ```
   
 9. Confirm that player names are being reported correctly.
@@ -165,11 +169,11 @@ Some work will be needed to get everything setup initially. After finishing setu
 
 ## Usage
 - Parameters
-    - -Mode
+    - -Type
         - Determines which scoreboard will be captured.
-        - -Mode VS // Alliance Duel
-        - -Mode TD // Tech Donations
-        - -Mode KS // Kill Score
+        - -Type VS = Alliance Duel
+        - -Type TD = Tech Donations
+        - -Type KS = Kill Score
      
     - -Day
         - Specifies which days of VS scores are to be captured.
@@ -179,37 +183,43 @@ Some work will be needed to get everything setup initially. After finishing setu
     - -PPS
         - Specifies how many players are clearly depicted (with rank number fully intact) in each scoreboard screenshot.
         - Required when automatically collecting screenshots.
-        - Will attempt to automatically set when -NoBot is used.
+        - Will attempt to automatically set when `-Mode Import` is used.
         - For best results, always specify your PPS.
      
-    - -NoBot
-        - Script will proceed without automatic screenshot capture.
-        - If no images in the "import" folder, will use the last screenshots taken if available.
-        - Only supports running one set at a time if you are importing your own images via the "import" folder. That means only the screenshots from a single scoreboard should be added at any given time.
+    - -Mode
+        - Determines how screenshots will be captured.
+        - -Type Auto   = Automatically capture screenshots
+        - -Type Manual = Manually capture screenshots through a guided process
+        - -Type Import = Import screenshots you've already captured (will attempt to use existing screenshots if no images added to import folder)
 
 - Examples
     - Get VS scores from days 1-4 with automatic screenshot capture:
     ```
-    .\LW-ScoreTracker.ps1 -Mode VS -Day 1,2,3,4 -PPS 5
+    .\LW-ScoreTracker.ps1 -Mode VS -Day 1,2,3,4 -PPS 5 -Mode Auto
     ```
     
-    - Get VS scores from days 1-4 with manually taken screenshots:
+    - Get VS scores from days 1-4 and take screenshots manually:
     ```
-    .\LW-ScoreTracker.ps1 -Mode VS -Day 1,2,3,4 -PPS 5 -NoBot
+    .\LW-ScoreTracker.ps1 -Mode VS -Day 1,2,3,4 -PPS 5 -Mode Manual
+    ```
+   
+    - Get VS scores from days 1-4 with imported screenshots:
+    ```
+    .\LW-ScoreTracker.ps1 -Mode VS -Day 1,2,3,4 -PPS 5 -Mode Manual
     ```
     
     - Get VS scores when your alliance has weekly score requirements with automatic screenshot capture:
     ```
-    .\LW-ScoreTracker.ps1 -Mode VS -PPS 5
+    .\LW-ScoreTracker.ps1 -Mode VS -PPS 5 -Mode Manual
     ```
     
     - Get weekly tech donation scores with automatic screenshot capture:
     ```
-    .\LW-ScoreTracker.ps1 -Mode TD -PPS 5
+    .\LW-ScoreTracker.ps1 -Mode TD -PPS 5 -Mode Auto
     ```
     
     - Get kill scores with automatic screenshot capture:
     ```
-    .\LW-ScoreTracker.ps1 -Mode KS -PPS 5
+    .\LW-ScoreTracker.ps1 -Mode KS -PPS 5 -Mode Auto
     ```
 
