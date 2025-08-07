@@ -132,7 +132,7 @@ param (
     [string]$Source,
     [string]$Destination,
     [ValidateSet("VS", "TD", "KS")]
-    [string]$Mode
+    [string]$Type
     )
 
     # Create destination if it doesn't exist
@@ -147,9 +147,9 @@ param (
     $counter = 1
     Try {
         foreach ($file in $pngFiles) {
-            if ($Mode -eq 'VS') { $newFileName = "VS_Day1_{0:D3}.png" -f $counter }
-            if ($Mode -eq 'TD') { $newFileName = "TD_{0:D3}.png" -f $counter }
-            if ($Mode -eq 'KS') { $newFileName = "KS_{0:D3}.png" -f $counter }
+            if ($Type -eq 'VS') { $newFileName = "VS_Day1_{0:D3}.png" -f $counter }
+            if ($Type -eq 'TD') { $newFileName = "TD_{0:D3}.png" -f $counter }
+            if ($Type -eq 'KS') { $newFileName = "KS_{0:D3}.png" -f $counter }
 
             $destinationPath = Join-Path $Destination $newFileName
             Move-Item -Path $file.FullName -Destination $destinationPath -Force
@@ -167,57 +167,169 @@ Function Get-Screenshots {
 param (
     [Parameter(Mandatory=$true)]  [string]$SavePath,
     [Parameter(Mandatory=$true)]  [string]$SaveName,
-    [Parameter(Mandatory=$true)]  [int]$LoopCount,
+    [Parameter(Mandatory=$false)]  [int]$LoopCount,
     [Parameter(Mandatory=$true)]  [string]$Type,
-    [Parameter(Mandatory=$false)] [string]$ScrollSetting # Setting to weekly uses weekly scrolling parameters
+    [Parameter(Mandatory=$false)] [string]$ScrollSetting, # Setting to weekly uses weekly scrolling parameters
+    [Parameter(Mandatory=$false)] [switch]$Manual,
+    [Parameter(Mandatory=$false)]  [int]$PPS,
+    [Parameter(Mandatory=$false)]  [int]$PlayerCount,
+    [Parameter(Mandatory=$false)]  [string]$Day
     )
 
     # Initialize counter
     [int]$counter = 1
 
-    do {
-        # Format filename
-        $TripleDigit = $counter.ToString("D3")
-        $FileName    = "$($SaveName)_$TripleDigit.png"
+    if (!($Manual)) {
+        do {
+            # Format filename
+            $TripleDigit = $counter.ToString("D3")
+            $FileName    = "$($SaveName)_$TripleDigit.png"
 
-        # 1) Capture screenshot
-        Get-AdbScreenshot -SavePath $SavePath -SaveName $FileName
+            # Capture screenshot
+            Get-AdbScreenshot -SavePath $SavePath -SaveName $FileName
 
-        # 2) Scroll only if this isn’t the last screenshot
-        if ($counter -lt $loopCount) {
-            if ($Type -eq 'VS' -and $ScrollSetting -ne 'Weekly') {
-                Invoke-AdbSwipe `
-                    -StartX 600 -StartY 1400 `
-                    -EndX 600   -EndY $Config.ADB.VsSwipeDistance `
-                    -Duration 3250
+            # Scroll only if this isn’t the last screenshot
+            if ($counter -lt $loopCount) {
+                if ($Type -eq 'VS' -and $ScrollSetting -ne 'Weekly') {
+                    Invoke-AdbSwipe `
+                        -StartX 600 -StartY 1400 `
+                        -EndX 600   -EndY $Config.ADB.VsSwipeDistance `
+                        -Duration 3250
+                }
+                elseif ($Type -eq 'VS' -and $ScrollSetting -eq 'Weekly') {
+                    Invoke-AdbSwipe `
+                        -StartX 600 -StartY 1400 `
+                        -EndX 600   -EndY $Config.ADB.VsWklySwipeDistance `
+                        -Duration 3250
+                }
+                elseif ($Type -in 'TD','KS') {
+                    Invoke-AdbSwipe `
+                        -StartX 600 -StartY 1400 `
+                        -EndX 600   -EndY $Config.ADB.TdSwipeDistance `
+                        -Duration 3250
+                }
+                # Delay to avoid tap animation
+                Start-Sleep -Seconds 1
             }
-            elseif ($Type -eq 'VS' -and $ScrollSetting -eq 'Weekly') {
-                Invoke-AdbSwipe `
-                    -StartX 600 -StartY 1400 `
-                    -EndX 600   -EndY $Config.ADB.VsWklySwipeDistance `
-                    -Duration 3250
+
+            # Update progress bar
+            $percentComplete = [math]::Round(($counter / $loopCount) * 100, 0)
+            Write-Progress `
+                -Activity "Job: Capture $Type Scoreboard" `
+                -Status   "Status: $counter of $loopCount" `
+                -PercentComplete $percentComplete
+
+            # Increment for next iteration
+            $counter++
+
+        } while ($counter -le $loopCount)
+    }
+
+if ($Manual) {
+    explorer.exe $SavePath
+    :mainLoop while ($true) {
+        $counter = 1  # reset counter at start of day
+        for ($i = 1; $i -le $PlayerCount; $i += $PPS) {
+            $startRank = $i
+            $endRank   = [math]::Min($i + $PPS - 1, $PlayerCount)
+
+            $TripleDigit = $counter.ToString('D3')
+            $FileName    = "$SaveName`_$TripleDigit.png"
+
+            if ($lastStartRank -notmatch '\d') { $lastStartRank = '' }
+            if ($lastEndRank -notmatch '\d') { $lastEndRank = 'N/A' }
+
+            $stopAll = $false
+
+            while ($true) {
+                Clear-Host
+                if ($Type -eq 'VS' -and $Day) { $ScreenTitleType = "$Type Day $Day" }
+                else { $ScreenTitleType = "$Type" }
+                Write-Host "$ScreenTitleType Manual Screenshot Capture`n"
+                Write-Host "Last screenshot taken: $LastFileName"
+                Write-Host "Next screenshot to take: $FileName`n"
+                Write-Host "=================================================="
+                Write-Host "[1] Take screenshot of ranks " -NoNewLine; Write-Host "$startRank–$endRank" -ForegroundColor Cyan
+                Write-Host "[2] Retake screenshot of previous ranks " -NoNewLine; Write-Host "$lastStartRank-$lastEndRank" -ForegroundColor Yellow
+                Write-Host "[3] Stop taking screenshots"
+                Write-Host "[Q] Quit the script`n"
+
+                $choice = (Read-Host 'Enter an option from above').Trim().ToUpper()
+
+                if ($choice -notin '1','2','3','Q') {
+                    Write-Host "`nERROR: Invalid input`n" -ForegroundColor Red
+                    continue
+                }
+
+                if ($choice -eq '2') {
+                    Get-AdbScreenshot -SavePath $SavePath -SaveName $LastFileName
+                    continue
+                }
+
+                if ($choice -eq '1') {
+                    Get-AdbScreenshot -SavePath $SavePath -SaveName $FileName
+                    
+                    $lastStartRank = $startRank
+                    $lastEndRank = $endRank
+                    $LastFileName = $FileName
+                    $counter++
+
+                    if ($endRank -eq $PlayerCount) {
+                        while ($true) {
+                            Clear-Host
+                            if ($Type -eq 'VS' -and $Day) { $ScreenTitleType = "$Type Day $Day" }
+                            else { $ScreenTitleType = "$Type" }
+                            Write-Host "$ScreenTitleType Manual Screenshot Capture`n"
+                            Write-Host "Last screenshot taken: $LastFileName`n"
+                            Write-Host "Next screenshot to take: $FileName"
+                            Write-Host "=================================================="
+                            Write-Host "[1] Done taking screenshots"
+                            Write-Host "[2] Retake screenshot of previous $PPS ranks"
+                            Write-Host "[3] Retake ALL screenshots for $ScreenTitleType"
+                            Write-Host "[Q] Quit script`n"
+
+                            $finalChoice = (Read-Host 'Enter an option from above').Trim().ToUpper()
+
+                            switch ($finalChoice) {
+                                '1' {
+                                    $stopAll = $true
+                                    break
+                                }
+                                '2' {
+                                    Get-AdbScreenshot -SavePath $SavePath -SaveName $FileName
+                                }
+                                '3' {
+                                    Write-Host "`nRestarting all screenshots for Day $Day...`n"
+                                    continue mainLoop  # properly restarts the whole loop
+                                }
+                                'Q' {
+                                    exit
+                                }
+                                default {
+                                    Write-Host "`nERROR: Invalid input`n" -ForegroundColor Red
+                                }
+                            }
+                        }
+                    }
+                }
+                elseif ($choice -eq '3') {
+                    $stopAll = $true
+                }
+                elseif ($choice -eq 'Q') {
+                    exit
+                }
+
+                break
             }
-            elseif ($Type -in 'TD','KS') {
-                Invoke-AdbSwipe `
-                    -StartX 600 -StartY 1400 `
-                    -EndX 600   -EndY $Config.ADB.TdSwipeDistance `
-                    -Duration 3250
+
+            if ($stopAll) {
+                break
             }
-            # Delay to avoid tap animation
-            Start-Sleep -Seconds 1
         }
 
-        # 3) Update progress bar
-        $percentComplete = [math]::Round(($counter / $loopCount) * 100, 0)
-        Write-Progress `
-            -Activity "Job: Capture $Type Scoreboard" `
-            -Status   "Status: $counter of $loopCount" `
-            -PercentComplete $percentComplete
-
-        # Increment for next iteration
-        $counter++
-
-    } while ($counter -le $loopCount)
+        break  # exits the outer `while ($true)` after full successful run
+    }
+}
 }
 
 Function Invoke-ResizeTemplate {
