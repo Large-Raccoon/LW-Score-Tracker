@@ -76,7 +76,7 @@ Some work will be needed to get everything setup initially. After finishing setu
 4. Set your PowerShell execution policy to "Bypass" so it's easier to run scripts.
     - Command:
     ```
-    Set-ExecutionPolicy Bypass
+    Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Bypass
     ```
 
 5. Populate your roster.csv with player names.
