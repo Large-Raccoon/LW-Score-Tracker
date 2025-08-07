@@ -4,15 +4,14 @@ Gets scoreboard data from screenshots and writes to text for use with Excel or G
 
 .DESCRIPTION
 Allows users the ability to have screenshots of VS (Alliance Duel), TD (Alliance Tech Donations), 
-and KS (Kill Score) processed into text through an OCR. Screenshots may be taken automatically or 
-imported from manually taken screenshots.
+and KS (Kill Score) processed into text through an OCR. Screenshots may be taken automatically, manually, or imported.
 
-.PARAMETER -Mode
+.PARAMETER -Type
 Determine what scoreboard will be processed.
 
--Mode VS = Alliance Duel
--Mode TD = Tech Donations
--Mode KS - Kill Score
+-Type VS = Alliance Duel
+-Type TD = Tech Donations
+-Type KS - Kill Score
 
 .PARAMETER -Day
 Specifies which days of VS scores are to be captured.
@@ -29,27 +28,34 @@ For best results, always specify the PPS.
 
 -PPS 5 = Specifies that 5 players and their ranks are clearly depicted in each screenshot
 
-.PARAMETER -NoBot
+.PARAMETER -Mode
+-Mode Auto = Automatically take screenshots
+-Mode Manual = Manually take screenshots
+-Mode Import = Use either existing or imported screenshots
+
 Script will proceed without automatic screenshot capture. Must manually add screenshot to the import folder.
 
 .EXAMPLE
 Get VS scores from days 1-4 with automatic screenshot capture:
-.\LW-ScoreTracker.ps1 -Mode VS -Day 1,2,3,4 -PPS 5
+.\LW-ScoreTracker.ps1 -Type VS -Day 1,2,3,4 -PPS 5 -Mode Auto
 
 Get VS scores from days 1-4 with manually taken screenshots:
-.\LW-ScoreTracker.ps1 -Mode VS -Day 1,2,3,4 -PPS 5 -NoBot
+.\LW-ScoreTracker.ps1 -Type VS -Day 1,2,3,4 -PPS 5 -Mode Manual
+
+Get VS scores from days 1-4 with imported screenshots:
+.\LW-ScoreTracker.ps1 -Type VS -Day 1,2,3,4 -PPS 5 -Mode Import
 
 Get VS scores when your alliance has weekly score requirements with automatic screenshot capture:
-.\LW-ScoreTracker.ps1 -Mode VS -PPS 5
+.\LW-ScoreTracker.ps1 -Type VS -PPS 5 -Mode Auto
 
 Get weekly tech donation scores with automatic screenshot capture:
-.\LW-ScoreTracker.ps1 -Mode TD -PPS 5
+.\LW-ScoreTracker.ps1 -Type TD -PPS 5 -Mode Auto
 
 Get kill scores with automatic screenshot capture:
-.\LW-ScoreTracker.ps1 -Mode KS -PPS 5
+.\LW-ScoreTracker.ps1 -Type KS -PPS 5 -Mode Auto
 
 .NOTES
-Version 1.0 - August 4th, 2025
+Version 1.1 - August 7th, 2025
 
 ########################
 ##---Prerequisites--- ##
@@ -62,8 +68,8 @@ Development and testing was all performed on Windows 11. Windows 10 should work 
 
 2. Powershell
 The bulk of this tool uses Powershell where version 5.1 is installed by default on Windws 10 and 11.
-However, Powershell 7 provides a superior experience and can be acquired from the link below if desired.
-- Source: https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4
+However, Powershell 7 provides a superior experience and can be acquired by installing via winget.
+- Source: Installed from terminal (Command: winget install --id Microsoft.PowerShell --source winget)
 - Minimum Version: 5.1 (default in Windows 10 and 11)
 - Recommended Version: 7.5.2 (or greater)
 
@@ -113,13 +119,20 @@ config.json. Powershell 7 will support both .p12 certificate and json certificat
 [CmdletBinding()]
 Param(
     [Parameter(Mandatory=$false)]
-    [ValidateScript( {($_ -match '^(all|([1-6](,[1-6])*)?)$')}) ]
-    [array]$Day,
-    [switch]$NoBot,
-    [int]$PPS,
     [ValidateSet("VS", "TD", "KS")]
-    [string]$Mode
+    [string]$Type,
+    [ValidateScript( {($_ -match '^(all|([1-6](,[1-6])*)?)$')})]
+    [array]$Day,
+    [Parameter(Mandatory=$true)]
+    [ValidateSet("Auto", "Manual", "Import")]
+    [string]$Mode,
+    [int]$PPS
     )
+
+# Assign a boolean value from -Mode
+if ($Mode -eq 'Auto') { $AutoMode = $true }
+if ($Mode -eq 'Manual') { $ManualMode = $true }
+if ($Mode -eq 'Import') { $ImportMode = $true }
 
 # --- Import Config File ---
 $ConfigPath = Join-Path -Path $PSScriptRoot -ChildPath 'config\config.json'
@@ -178,13 +191,16 @@ if (!(Test-Path "$import\TD" -EA SilentlyContinue)) { New-Item -ItemType Directo
 if (!(Test-Path "$import\VS" -EA SilentlyContinue)) { New-Item -ItemType Directory -Path "$import\VS" | Out-Null }
 
 # Informational variables for the header
-if ($NoBot) { $ScreenshotSource = 'Manual\Existing' } else { $ScreenshotSource = 'Auto' }
+if ($AutoMode) { $ScreenshotSource = 'Auto'; [int]$StartDelay = 10; $ScriptStart = "in $StartDelay seconds" }
+if ($ManualMode) { $ScreenshotSource = 'Manual'; $ScriptStart = 'after continuing' }
+if ($ImportMode) { $ScreenshotSource = 'Import'; $ScriptStart = 'after continuing' }
 if ($null -eq $Day) { $HeaderDay = 'N/A' } else { $HeaderDay = $Day }
-if ($Mode -contains 'VS') { [int]$HeaderScore = $VsMinScore }
-if ($Mode -contains 'TD') { [int]$HeaderScore = $TdMinScore }
-if ($Mode -contains 'VS' -and $Config.Alliance.VS_DailyMin -ne '0') { $ScoreFrequency = 'Daily' } else { $ScoreFrequency = 'Weekly' }
-if ($Mode -contains 'TD' -and $Config.Alliance.TD_WeeklyMin -ne '0') { $ScoreFrequency = 'Weekly' }
-if ($Mode -contains 'KS' -and $Config.Alliance.TD_WeeklyMin -ne '0') { $ScoreFrequency = 'N/A' }
+if ($Type -eq 'VS') { [int]$HeaderScore = $VsMinScore }
+if ($Type -eq 'TD') { [int]$HeaderScore = $TdMinScore }
+if ($Type -eq 'VS' -and $Config.Alliance.VS_DailyMin -ne '0') { $ScoreFrequency = 'Daily' } else { $ScoreFrequency = 'Weekly' }
+if ($Type -eq 'TD' -and $Config.Alliance.TD_WeeklyMin -ne '0') { $ScoreFrequency = 'Weekly' }
+if ($Type -eq 'KS' -and $Config.Alliance.TD_WeeklyMin -ne '0') { $ScoreFrequency = 'N/A' }
+
 
 # Format the score into an easy to read format.
 $HeaderScoreFormatted = "{0:N0}" -f $HeaderScore
@@ -200,32 +216,32 @@ Image Source: $ScreenshotSource
 Roster File: $($Config.Alliance.RosterName)
 Player Count: $($RosterData.Player.Count)
 
-Scoreboard: $Mode
+Scoreboard: $Type
 Day: $HeaderDay
 Minimum Score: $HeaderScoreFormatted
 Score Frequency: $ScoreFrequency
 
-Script will begin in 10 seconds...
+Script will begin $ScriptStart...
 Press CTRL+C to cancel
 ======================================"
 )
 
 # Validate parameters and config.json
-if (($Mode -eq 'VS') -and ($Config.Alliance.VS_DailyMin -ne '0') -and ($Config.Alliance.VS_WeeklyMin -ne '0')) {
+if (($Type -eq 'VS') -and ($Config.Alliance.VS_DailyMin -ne '0') -and ($Config.Alliance.VS_WeeklyMin -ne '0')) {
     Write-Host "ERROR: You cannot set both daily and weekly requirements in config.json." -ForegroundColor Red
     Write-Host "Set VS_DailyMin or VS_WeeklyMin to 0 in config.json then try again."-ForegroundColor Magenta
     exit
 }
 
-# Enforce $Day parameter if $Mode is set to VS with VS_DailyMin greater than 0 in config.json
-if ($Mode -contains 'VS' -and $Config.Alliance.VS_DailyMin -ne '0'-and -not $PSBoundParameters.ContainsKey('Day')) {
-    Write-Host "ERROR: Parameter -Day is required when using -Mode VS with daily score requirements.`n" -ForegroundColor Red
+# Enforce $Day parameter if $Type is set to VS with VS_DailyMin greater than 0 in config.json
+if ($Type -eq 'VS' -and $Config.Alliance.VS_DailyMin -ne '0'-and -not $PSBoundParameters.ContainsKey('Day')) {
+    Write-Host "ERROR: Parameter -Day is required when using -Type VS with daily score requirements.`n" -ForegroundColor Red
     exit
 }
 
-# Enforce -PPS parameter if -NoBot was not supplied
-if (($PPS -le '0' -or -not $PSBoundParameters.ContainsKey('PPS')) -and -not $PSBoundParameters.ContainsKey('NoBot')) {
-    Write-Host "ERROR: Parameter -PPS with a valid number is required if -NoBot is not supplied.`n" -ForegroundColor Red
+# Enforce -PPS parameter if -Auto was supplied
+if (($PPS -le '0' -or -not $PSBoundParameters.ContainsKey('PPS')) -and $Mode -eq 'Auto') {
+    Write-Host "ERROR: Parameter -PPS with a valid number is required if -Mode Auto was supplied.`n" -ForegroundColor Red
     Write-Host "To resolve, check how many ranks are clearly displayed without scrolling on your scoreboard." -ForegroundColor Red
     Write-Host "Add the number after -PPS. Example: -PPS 5" -ForegroundColor Red
     exit
@@ -238,10 +254,11 @@ if ($RosterData.Player.Count -eq 0) {
 }
 
 # Wait before proceeding in case user decides to cancel
-Start-Sleep -Seconds 10
+if ($Mode -notin @('Import', 'Manual')) { Start-Sleep -Seconds $StartDelay }
+else { pause }
 
 # Delete old screenshots
-if (!($NoBot)) { 
+if (!($ImportMode)) { 
     Get-ChildItem -Path "$screens\*" -File -Recurse -EA SilentlyContinue | Remove-Item -Force -EA SilentlyContinue
 }
 
@@ -252,15 +269,11 @@ Remove-Item -Path "$preproc\*" -Recurse -Force -EA SilentlyContinue
 Remove-Item -Path "$logs\*" -Recurse -Force -EA SilentlyContinue
 
 #####################################################################################
-## ------ 2: Import user's screenshots if running with -NoBot ------
+## ------ 2: IMPORT MODE: Import user's screenshots ------
 #####################################################################################
 
-if ($NoBot) {
-    if ($Mode -contains 'VS') {
-        # Set Type to match Mode for this loop
-        $Type = @()
-        [string]$Type = 'VS'
-
+if ($ImportMode) {
+    if ($Type -eq 'VS') {
         Write-Host "IMAGE IMPORT: Check for new $Type screenshots to import" -ForegroundColor Cyan
 
         # Get a list of VS screenshots to import
@@ -274,19 +287,16 @@ if ($NoBot) {
             if ($ExistingScreenshots.Count -ge 1) { $SampleHash = Get-FileHash -Path $SampleScreen -Algorithm SHA256 -EA SilentlyContinue }
             if ($ImportHash -ne $SampleHash) {
                 Remove-Item -Path "$screens\$Type" -Recurse -Force -EA SilentlyContinue
-                Import-Image -Source "$import\$Type" -Destination "$screens\$Type" -Mode $Type
+                Import-Image -Source "$import\$Type" -Destination "$screens\$Type" -Type $Type
                 Write-Host "Status: Completed - Imported $($ImportList.Count) image(s).`n" -ForegroundColor Green
                 }
         } Else {
             Write-Host "Status: Completed - No new $Type screenshot(s) detected.`n" -ForegroundColor Yellow
             #if 
         }
-        }
-    if ($Mode -contains 'TD') {
-        # Set Type to match Mode for this loop
-        $Type = @()
-        [string]$Type = 'TD'
+    }
 
+    if ($Type -eq 'TD') {
         Write-Host "IMAGE IMPORT: Check for new $Type screenshots to import" -ForegroundColor Cyan
 
         # Get a list of VS screenshots to import
@@ -300,18 +310,14 @@ if ($NoBot) {
             if ($ImportHash -ne $SampleHash) {
                 Write-Host "IMAGE IMPORT: Tech Donation ($Type) screenshot(s) detected. Importing $($ImportList.Count) image(s).`n" -ForegroundColor Green
                 Remove-Item -Path "$screens\$Type" -Recurse -Force -EA SilentlyContinue
-                Import-Image -Source "$import\$Type" -Destination "$screens\$Type" -Mode $Type
+                Import-Image -Source "$import\$Type" -Destination "$screens\$Type" -Type $Type
                 }
             } Else {
                 Write-Host "IMAGE IMPORT: No new $Type screenshot(s) detected.`n"
                 }
         }
 
-    if ($Mode -contains 'KS') {
-        # Set Type to match Mode for this loop
-        $Type = @()
-        [string]$Type = 'KS'
-
+    if ($Type -eq 'KS') {
         Write-Host "IMAGE IMPORT: Check for new $Type screenshots to import" -ForegroundColor Cyan
 
         # Get a list of VS screenshots to import
@@ -325,20 +331,20 @@ if ($NoBot) {
             if ($ImportHash -ne $SampleHash) {
                 Write-Host "IMAGE IMPORT: Kill Score ($Type) screenshot(s) detected. Importing $($ImportList.Count) image(s).`n" -ForegroundColor Green
                 Remove-Item -Path "$screens\$Type" -Recurse -Force -EA SilentlyContinue
-                Import-Image -Source "$import\$Type" -Destination "$screens\$Type" -Mode $Type
+                Import-Image -Source "$import\$Type" -Destination "$screens\$Type" -Type $Type
                 }
             } Else {
                 Write-Host "IMAGE IMPORT: No new $Type screenshot(s) detected.`n"
                 }
         }
-    }# end -NoBot image import loop
+    }# end -Mode Import image import loop
 
 #####################################################################################
-## ------ 3: BOT OPERATION: Collect Screenshots ------
+## ------ 3: AUTO MODE: Collect Screenshots ------
 #####################################################################################
 
 # Only run this loop if -NoBot was NOT specified in params.
-if (!($NoBot)) {
+if ($AutoMode) {
 
     Write-Host "INITIALIZATION: Prepare for navigation" -ForegroundColor Cyan
 
@@ -403,10 +409,7 @@ if (!($NoBot)) {
     $loopCount = [math]::Ceiling($rosterData.Player.Count / $PPS)
 
     # Begin VS screenshot capture routine
-    if ($Mode -contains 'VS') {
-        $Type = @()
-        [string]$Type = 'VS'
-
+    if ($Type -eq 'VS') {
         # Remove existing screenshots
         Get-ChildItem -Path "$screens\$Type" -File -Recurse | Remove-Item
 
@@ -428,7 +431,7 @@ if (!($NoBot)) {
                     -Type $Type
                     Write-Host "Status: Completed`n" -ForegroundColor Green
                 } Catch {
-                    Write-Host "ERROR: Failed to run Get-Screenshot function" -ForegroundColor Red
+                    Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
                 }
             }
         
@@ -443,7 +446,7 @@ if (!($NoBot)) {
                     -Type $Type
                     Write-Host "Status: Completed`n" -ForegroundColor Green
                 } Catch {
-                    Write-Host "ERROR: Failed to run Get-Screenshot function" -ForegroundColor Red
+                    Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
                 }
             }
 
@@ -458,7 +461,7 @@ if (!($NoBot)) {
                     -Type $Type
                     Write-Host "Status: Completed`n" -ForegroundColor Green
                 } Catch {
-                    Write-Host "ERROR: Failed to run Get-Screenshot function" -ForegroundColor Red
+                    Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
                 }
             }
 
@@ -473,7 +476,7 @@ if (!($NoBot)) {
                     -Type $Type
                     Write-Host "Status: Completed`n" -ForegroundColor Green
                 } Catch {
-                    Write-Host "ERROR: Failed to run Get-Screenshot function" -ForegroundColor Red
+                    Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
                 }
             }
 
@@ -488,7 +491,7 @@ if (!($NoBot)) {
                     -Type $Type
                     Write-Host "Status: Completed`n" -ForegroundColor Green
                 } Catch {
-                    Write-Host "ERROR: Failed to run Get-Screenshot function" -ForegroundColor Red
+                    Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
                 }
             }
 
@@ -503,7 +506,7 @@ if (!($NoBot)) {
                     -Type $Type
                     Write-Host "Status: Completed`n" -ForegroundColor Green
                 } Catch {
-                    Write-Host "ERROR: Failed to run Get-Screenshot function" -ForegroundColor Red
+                    Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
                 }
             }
         }# end VS Day screenshot capture loop
@@ -511,15 +514,21 @@ if (!($NoBot)) {
         # if VS_WeeklyMin in config.json is set to anything but 0, capture weekly scores.
         if ($Config.Alliance.VS_WeeklyMin -ne '0') {
             Select-Button -TemplateName 'VsWeekly.png' -BackupTemplate 'VsWeekly-EndOfVs.png'
-            Get-Screenshots -SavePath "$screens\$Type" -SaveName "${Type}_Weekly" -LoopCount $loopCount -Type $Type -ScrollSetting 'Weekly'
+            Try {
+                Get-Screenshots -SavePath "$screens\$Type" `
+                -SaveName "${Type}_Weekly" `
+                -LoopCount $loopCount `
+                -Type $Type `
+                -ScrollSetting 'Weekly'
+                Write-Host "Status: Completed`n" -ForegroundColor Green
+            } Catch {
+                Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
+            }
         }
     }
 
     # Begin TD (Tech Donations) screen capture loop
-    if ($Mode -contains 'TD') {
-        $Type = @()
-        [string]$Type = 'TD'
-        
+    if ($Type -eq 'TD') {
         Select-Button -TemplateName 'Alliance.png'
         Select-Button -TemplateName 'StrengthRanking.png'
         Select-Button -TemplateName 'StrRnkDonate.png'
@@ -527,33 +536,218 @@ if (!($NoBot)) {
 
         # Capture screenshots
         Get-Screenshots -SavePath "$screens\$Type" -SaveName $Type -LoopCount $loopCount -Type $Type
-        }# end TD (Tech Donations) screenshot capture loop
+    }# end TD (Tech Donations) screenshot capture loop
 
     # Begin KS (Kill Score) screen capture loop
-    if ($Mode -contains 'KS') {
-        $Type = @()
-        [string]$Type = 'KS'
-        
+    if ($Type -eq 'KS') {
         Select-Button -TemplateName 'Alliance.png'
         Select-Button -TemplateName 'StrengthRanking.png'
         Select-Button -TemplateName 'StrRnkKills.png'
 
         # Capture screenshots
         Get-Screenshots -SavePath "$screens\$Type" -SaveName $Type -LoopCount $loopCount -Type $Type
-        }# end KS (Kill Score) screenshot capture loop
-    
-
-    }# end navigation loop
+    }# end KS (Kill Score) screenshot capture loop
+}# end auto loop
 
 
 #####################################################################################
-## ------ 4: Prepare Screenshots for OCR (preprocessing) ------
+## ------ 4: MANUAL MODE: Collect Screenshots ------
 #####################################################################################
-if ($Mode -contains 'VS') {
-    # Set Type to match Mode for this loop
-    $Type = @()
-    [string]$Type = 'VS'
-    
+
+if ($ManualMode) {
+    Write-Host "INITIALIZATION: Prepare for navigation" -ForegroundColor Cyan
+
+    # If Emulator is set to Bluestacks in config.json, confirm ADB is enabled in it. If not, exit.
+    if ($Config.ADB.Emulator -eq 'Bluestacks') {
+        $AdbSetting = Get-BluestacksAdbSetting -ConfigPath "$env:ProgramData\BlueStacks_nxt\bluestacks.conf"
+        if (!($AdbSetting)) {
+            Write-Host "ERROR: ADB is not enabled in Bluestacks. Enable then try again." -ForegroundColor Red
+            exit
+        }
+    }
+
+    # If using Bluestacks, confirm it's running. Launch it if not.
+    if ($($Config.ADB.Emulator) -eq 'Bluestacks') {
+        # Remove the file extension to get the process name
+        $ProcessName = $Config.ADB.EmulatorExe -replace '\.[^.]+$', ''
+        
+        # Check if process is running. Launch if not.
+        if (!(Get-Process -Name $ProcessName -ErrorAction SilentlyContinue)) {
+            Write-Host "$($Config.ADB.Emulator) is not running. Launching..."
+            $Instance = Get-BlueStacksInstance
+            $BlueStacks = Get-ProductExecutable -ProductName $Config.ADB.Emulator -FileName $Config.ADB.EmulatorExe
+
+            # Build parameters and execute
+            $params = @(
+                '--instance'
+                $Instance
+            )
+            & $BlueStacks $params
+
+            # Wait 30 seconds to give BlueStacks some time to load.
+            [int]$Delay = 30
+            Write-Host "Waiting $Delay seconds before continuing."
+            Start-Sleep -Seconds $Delay
+        }
+    }
+
+    # Start ADB if not running and connect to device
+    Start-AdbServer
+    Connect-AdbDevice
+
+    # Check the current app on screen and launch package if needed.
+    Start-AdbPackage -Package $Config.ADB.Package
+
+    # If we made it here, we can safely import the navigation module.
+    Import-Module "$modules\Navigation.psm1" -Force
+
+    # Begin VS manual screenshot capture routine
+    if ($Type -eq 'VS') {
+        # Remove existing screenshots
+        Get-ChildItem -Path "$screens\$Type" -File -Recurse | Remove-Item
+
+        if (($day -contains '1') -or ($day -eq 'All')) {
+            Try {
+                # Run manual screenshot loop.
+                Get-Screenshots -SavePath "$screens\$Type" `
+                    -SaveName "${Type}_Day1" `
+                    -Type $Type `
+                    -Manual `
+                    -PPS $PPS `
+                    -PlayerCount $($RosterData.Player.Count) `
+                    -Day 1
+                Write-Host "Status: Completed`n" -ForegroundColor Green
+            } Catch {
+                Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
+            }
+        }
+
+        if (($day -contains '2') -or ($day -eq 'All')) {
+            Try {
+                # Run manual screenshot loop.
+                Get-Screenshots -SavePath "$screens\$Type" `
+                    -SaveName "${Type}_Day2" `
+                    -Type $Type `
+                    -Manual `
+                    -PPS $PPS `
+                    -PlayerCount $($RosterData.Player.Count) `
+                    -Day 2
+                Write-Host "Status: Completed`n" -ForegroundColor Green
+            } Catch {
+                Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
+            }
+        }
+
+        if (($day -contains '3') -or ($day -eq 'All')) {
+            Try {
+                # Run manual screenshot loop.
+                Get-Screenshots -SavePath "$screens\$Type" `
+                    -SaveName "${Type}_Day3" `
+                    -Type $Type `
+                    -Manual `
+                    -PPS $PPS `
+                    -PlayerCount $($RosterData.Player.Count) `
+                    -Day 3
+                Write-Host "Status: Completed`n" -ForegroundColor Green
+            } Catch {
+                Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
+            }
+        }
+
+        if (($day -contains '4') -or ($day -eq 'All')) {
+            Try {
+                # Run manual screenshot loop.
+                Get-Screenshots -SavePath "$screens\$Type" `
+                    -SaveName "${Type}_Day4" `
+                    -Type $Type `
+                    -Manual `
+                    -PPS $PPS `
+                    -PlayerCount $($RosterData.Player.Count) `
+                    -Day 4
+                Write-Host "Status: Completed`n" -ForegroundColor Green
+            } Catch {
+                Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
+            }
+        }
+
+        if (($day -contains '5') -or ($day -eq 'All')) {
+            Try {
+                # Run manual screenshot loop.
+                Get-Screenshots -SavePath "$screens\$Type" `
+                    -SaveName "${Type}_Day5" `
+                    -Type $Type `
+                    -Manual `
+                    -PPS $PPS `
+                    -PlayerCount $($RosterData.Player.Count) `
+                    -Day 5
+                Write-Host "Status: Completed`n" -ForegroundColor Green
+            } Catch {
+                Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
+            }
+        }
+
+        if (($day -contains '6') -or ($day -eq 'All')) {
+            Try {
+                # Run manual screenshot loop.
+                Get-Screenshots -SavePath "$screens\$Type" `
+                    -SaveName "${Type}_Day6" `
+                    -Type $Type `
+                    -Manual `
+                    -PPS $PPS `
+                    -PlayerCount $($RosterData.Player.Count) `
+                    -Day 6
+                Write-Host "Status: Completed`n" -ForegroundColor Green
+            } Catch {
+                Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
+            }
+        }
+        
+        # if VS_WeeklyMin in config.json is set to anything but 0, capture weekly scores.
+        if ($Config.Alliance.VS_WeeklyMin -ne '0') {
+            Try {
+                # Run manual screenshot loop.
+                Get-Screenshots -SavePath "$screens\$Type" `
+                    -SaveName "${Type}_Weekly" `
+                    -Type $Type `
+                    -Manual `
+                    -PPS $PPS `
+                    -PlayerCount $($RosterData.Player.Count)
+                Write-Host "Status: Completed`n" -ForegroundColor Green
+            } Catch {
+                Write-Host "ERROR: Failed to run Get-Screenshots function" -ForegroundColor Red
+            }
+        }
+    }# end VS loop
+
+    # Begin TD (Tech Donations) screen capture loop
+    if ($Type -eq 'TD') {
+        Select-Button -TemplateName 'Alliance.png'
+        Select-Button -TemplateName 'StrengthRanking.png'
+        Select-Button -TemplateName 'StrRnkDonate.png'
+        Select-Button -TemplateName 'StrRnkDonateWeekly.png'
+
+        # Capture screenshots
+        Get-Screenshots -SavePath "$screens\$Type" -SaveName $Type -Type $Type -Manual -PPS $PPS -PlayerCount $($RosterData.Player.Count)
+    }# end TD (Tech Donations) screenshot capture loop
+
+    # Begin KS (Kill Score) screen capture loop
+    if ($Type -eq 'KS') {
+        Select-Button -TemplateName 'Alliance.png'
+        Select-Button -TemplateName 'StrengthRanking.png'
+        Select-Button -TemplateName 'StrRnkKills.png'
+
+        # Capture screenshots
+        Get-Screenshots -SavePath "$screens\$Type" -SaveName $Type -Type $Type -Manual -PPS $PPS -PlayerCount $($RosterData.Player.Count)
+    }# end KS (Kill Score) screenshot capture loop
+
+
+}# end manual loop
+
+
+#####################################################################################
+## ------ 5: Prepare Screenshots for OCR (preprocessing) ------
+#####################################################################################
+if ($Type -eq 'VS') {
     # Generate VS jobs
     Write-Host "JOB COLLECTION: Collecting jobs to process..." -ForegroundColor Cyan
     $Jobs = Get-Jobs -Templates $Templates -ScaledTemplates $ScaledTemplates -Screens $Screens -Preproc $Preproc -Day $Day -PPS $PPS -Type $Type
@@ -568,12 +762,7 @@ if ($Mode -contains 'VS') {
     Invoke-MTPreprocessing -Jobs $PreprocJobs
 }
 
-if ($Mode -contains 'TD') {
-    # Set Type to match Mode for this loop
-    $Type = @()
-    [string]$Type = 'TD'
-    
-
+if ($Type -eq 'TD') {
     Write-Host "JOB COLLECTION: Collecting jobs to process..." -ForegroundColor Cyan
     
     # Generate VS jobs
@@ -589,12 +778,7 @@ if ($Mode -contains 'TD') {
     Invoke-MTPreprocessing -Jobs $PreprocJobs
 }
 
-if ($Mode -contains 'KS') {
-    # Set Type to match Mode for this loop
-    $Type = @()
-    [string]$Type = 'KS'
-    
-
+if ($Type -eq 'KS') {
     Write-Host "JOB COLLECTION: Collecting jobs to process..." -ForegroundColor Cyan
     
     # Identify jobs
@@ -611,7 +795,7 @@ if ($Mode -contains 'KS') {
 }
 
 #####################################################################################
-## ------ 5: Process the OCR results and export to CSV
+## ------ 6: Process the OCR results and export to CSV
 #####################################################################################
 # GetEnumerator allows us to list key value pairs from a hash table
 foreach ($kvp in $ScreenshotLists.GetEnumerator() | Sort-Object Key) {
@@ -620,9 +804,9 @@ foreach ($kvp in $ScreenshotLists.GetEnumerator() | Sort-Object Key) {
     $NamePrefix = $kvp.Key
 
     # Define our report type
-    if ($Mode -eq 'VS') { $Type = 'VS' }
-    if ($Mode -eq 'TD') { $Type = 'TD' }
-    if ($Mode -eq 'KS') { $Type = 'KS' }
+    if ($Type -eq 'VS') { $Type = 'VS' }
+    if ($Type -eq 'TD') { $Type = 'TD' }
+    if ($Type -eq 'KS') { $Type = 'KS' }
 
     # Get list of preprocessed images for the OCR
     #Write-Host "Getting preprocessed images for $NamePrefix now."
@@ -640,7 +824,7 @@ foreach ($kvp in $ScreenshotLists.GetEnumerator() | Sort-Object Key) {
     Write-Host "REPORT GENERATION: Correct player names" -ForegroundColor Cyan
     $Report = Update-PlayerNames -RosterData $RosterData -Report $Report -Origin $NamePrefix
 
-    # Set the minimum score based on the $Type (determined by $Mode)
+    # Set the minimum score based on the $Type (determined by $Type)
     $MinScore = (Get-Variable -Name "$($Type)MinScore" -ErrorAction SilentlyContinue).Value
 
     # Calculate if player passed minimum requirements
@@ -657,7 +841,7 @@ foreach ($kvp in $ScreenshotLists.GetEnumerator() | Sort-Object Key) {
     #$Report | Out-Host
 
 #####################################################################################
-## ------ 6: OPTIONAL: Export CSV to Google Sheets
+## ------ 7: OPTIONAL: Export CSV to Google Sheets
 #####################################################################################
     # Define the starting cell of CSV data that will be exported to sheet
     if ($Config.GoogleSheets.Enabled -eq '1') {
