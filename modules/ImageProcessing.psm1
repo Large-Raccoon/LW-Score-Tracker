@@ -241,7 +241,7 @@ if ($Manual) {
 
             $stopAll = $false
 
-            while ($true) {
+            :mainInputLoop while ($true) {
                 Clear-Host
                 if ($Type -eq 'VS' -and $Day) { $ScreenTitleType = "$Type Day $Day" }
                 else { $ScreenTitleType = "$Type" }
@@ -318,8 +318,7 @@ if ($Manual) {
                 elseif ($choice -eq 'Q') {
                     exit
                 }
-
-                break
+                break mainInputLoop
             }
 
             if ($stopAll) {
@@ -746,5 +745,6 @@ param (
         } -ArgumentList $Jobs -MaxThreads $Config.Core.Threads -JobName 'Preprocess Images'
     }
 }
+
 
 Export-ModuleMember -Function *
