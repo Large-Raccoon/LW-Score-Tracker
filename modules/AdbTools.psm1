@@ -168,9 +168,9 @@ Param (
     [string]$SaveName
     )
 
-    $FullPath = Join-Path "$SavePath" $SaveName
+    $FullName = Join-Path $SavePath $SaveName
     & $adb -s $Config.ADB.Device shell screencap -p /sdcard/screen.png
-    & $adb -s $Config.ADB.Device pull -q /sdcard/screen.png $FullPath
+    & $adb -s $Config.ADB.Device pull -q /sdcard/screen.png $FullName
     & $adb -s $Config.ADB.Device shell rm /sdcard/screen.png
 }
 
