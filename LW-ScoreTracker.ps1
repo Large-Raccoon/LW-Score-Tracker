@@ -31,7 +31,7 @@ For best results, always specify the PPS.
 .PARAMETER -Mode
 -Mode Auto = Automatically take screenshots
 -Mode Manual = Manually take screenshots
--Mode Import = Use either existing or imported screenshots
+-Mode Import = Import screenshots you've already captured.
 
 Script will proceed without automatic screenshot capture. Must manually add screenshot to the import folder.
 
@@ -55,7 +55,9 @@ Get kill scores with automatic screenshot capture:
 .\LW-ScoreTracker.ps1 -Type KS -PPS 5 -Mode Auto
 
 .NOTES
-Version 1.1 - August 7th, 2025
+Version 1.2 - August 8th, 2025 - Added PC client support in manual mode. Enhanced template scaling logic.
+Version 1.1 - August 7th, 2025 - Added manual mode for guided screenshot support
+Version 1.0 - August 4th, 2025 - Initial release
 
 ########################
 ##---Prerequisites--- ##
@@ -250,6 +252,14 @@ if (($PPS -le '0' -or -not $PSBoundParameters.ContainsKey('PPS')) -and $Mode -eq
 # Enforce using a populated roster
 if ($RosterData.Player.Count -eq 0) {
     Write-Host "ERROR: Your $($Config.Alliance.RosterName) file needs to be populated with your players.`n" -ForegroundColor Red
+    exit
+}
+
+# Ensure that ADB and PC are not simulatenously enabled.
+if (!($Import) -and $Config.ADB.Enabled -eq 1 -and $Config.PC.Enabled -eq 1) {
+    Write-Host "ERROR: You cannot enable both ADB and PC at the same time in this mode.`n" -ForegroundColor Red
+    Write-Host "To resolve, open your config.json and disable ADB (Android) or PC (PC Client)."
+    Write-Host "Find the corresponding `"Enabled`": 1 setting and change from 1 to 0."
     exit
 }
 
@@ -557,49 +567,62 @@ if ($AutoMode) {
 if ($ManualMode) {
     Write-Host "INITIALIZATION: Prepare for navigation" -ForegroundColor Cyan
 
-    # If Emulator is set to Bluestacks in config.json, confirm ADB is enabled in it. If not, exit.
-    if ($Config.ADB.Emulator -eq 'Bluestacks') {
-        $AdbSetting = Get-BluestacksAdbSetting -ConfigPath "$env:ProgramData\BlueStacks_nxt\bluestacks.conf"
-        if (!($AdbSetting)) {
-            Write-Host "ERROR: ADB is not enabled in Bluestacks. Enable then try again." -ForegroundColor Red
-            exit
+    if ($Config.ADB.Enabled -eq '1') {
+        # If Emulator is set to Bluestacks in config.json, confirm ADB is enabled in it. If not, exit.
+        if ($Config.ADB.Emulator -eq 'Bluestacks') {
+            $AdbSetting = Get-BluestacksAdbSetting -ConfigPath "$env:ProgramData\BlueStacks_nxt\bluestacks.conf"
+            if (!($AdbSetting)) {
+                Write-Host "ERROR: ADB is not enabled in Bluestacks. Enable then try again." -ForegroundColor Red
+                exit
+            }
         }
+
+        # If using Bluestacks, confirm it's running. Launch it if not.
+        if ($($Config.ADB.Emulator) -eq 'Bluestacks') {
+            # Remove the file extension to get the process name
+            $ProcessName = $Config.ADB.EmulatorExe -replace '\.[^.]+$', ''
+            
+            # Check if process is running. Launch if not.
+            if (!(Get-Process -Name $ProcessName -ErrorAction SilentlyContinue)) {
+                Write-Host "$($Config.ADB.Emulator) is not running. Launching..."
+                $Instance = Get-BlueStacksInstance
+                $BlueStacks = Get-ProductExecutable -ProductName $Config.ADB.Emulator -FileName $Config.ADB.EmulatorExe
+
+                # Build parameters and execute
+                $params = @(
+                    '--instance'
+                    $Instance
+                )
+                & $BlueStacks $params
+
+                # Wait 30 seconds to give BlueStacks some time to load.
+                [int]$Delay = 30
+                Write-Host "Waiting $Delay seconds before continuing."
+                Start-Sleep -Seconds $Delay
+            }
+        }
+
+        # Start ADB if not running and connect to device
+        Start-AdbServer
+        Connect-AdbDevice
+
+        # Check the current app on screen and launch package if needed.
+        Start-AdbPackage -Package $Config.ADB.Package
     }
 
-    # If using Bluestacks, confirm it's running. Launch it if not.
-    if ($($Config.ADB.Emulator) -eq 'Bluestacks') {
-        # Remove the file extension to get the process name
-        $ProcessName = $Config.ADB.EmulatorExe -replace '\.[^.]+$', ''
-        
+    if ($Config.PC.Enabled -eq '1') {
         # Check if process is running. Launch if not.
-        if (!(Get-Process -Name $ProcessName -ErrorAction SilentlyContinue)) {
-            Write-Host "$($Config.ADB.Emulator) is not running. Launching..."
-            $Instance = Get-BlueStacksInstance
-            $BlueStacks = Get-ProductExecutable -ProductName $Config.ADB.Emulator -FileName $Config.ADB.EmulatorExe
-
-            # Build parameters and execute
-            $params = @(
-                '--instance'
-                $Instance
-            )
-            & $BlueStacks $params
-
-            # Wait 30 seconds to give BlueStacks some time to load.
-            [int]$Delay = 30
-            Write-Host "Waiting $Delay seconds before continuing."
-            Start-Sleep -Seconds $Delay
+        if (!(Get-Process -Name $Config.PC.ProcessName -ErrorAction SilentlyContinue)) {
+            Write-Host "PC client is not running. Launching..."
+            $PcClient = Get-ProductExecutable -ProductName $Config.PC.ProcessName -FileName $Config.PC.LaunchExe
+            & $PcClient
+            Start-Sleep -Seconds 15
+            Set-WindowSize -ProcessName $Config.PC.ProcessName -Width $Config.PC.WindowWidth -Height $Config.PC.WindowHeight
         }
     }
-
-    # Start ADB if not running and connect to device
-    Start-AdbServer
-    Connect-AdbDevice
-
-    # Check the current app on screen and launch package if needed.
-    Start-AdbPackage -Package $Config.ADB.Package
 
     # If we made it here, we can safely import the navigation module.
-    Import-Module "$modules\Navigation.psm1" -Force
+    #Import-Module "$modules\Navigation.psm1" -Force
 
     # Begin VS manual screenshot capture routine
     if ($Type -eq 'VS') {
