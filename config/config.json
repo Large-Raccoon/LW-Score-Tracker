@@ -9,6 +9,7 @@
     "Languages": "eng+kor"
   },
   "ADB": {
+    "Enabled": 1,
     "Emulator": "Bluestacks",
     "EmulatorExe": "HD-Player.exe",
     "Device": "127.0.0.1:5555",
@@ -16,6 +17,13 @@
     "VsSwipeDistance": "457",
     "VsWklySwipeDistance": "443",
     "TdSwipeDistance": "450"
+  },
+  "PC": {
+    "Enabled": 0,
+    "ProcessName": "LastWar",
+    "LaunchExe": "Launch.exe",
+    "WindowWidth": "720",
+    "WindowHeight": "1280"
   },
   "Core": {
     "Threads": 6,
