@@ -70,7 +70,7 @@ Some work will be needed to get everything setup initially. After finishing setu
 3. Launch PowerShell (can be found in the Start Menu) then navigate to the path you extracted this repository into.
     - Example:
     ```
-    cd "C:\Last War\Score Tracker\1.0"
+    cd C:\LW-ScoreTracker
     ```
 
 4. Set your PowerShell execution policy to "Bypass" so it's easier to run scripts.
@@ -88,41 +88,75 @@ Some work will be needed to get everything setup initially. After finishing setu
 6. config.json
     - Set your score requirements
         - From the same config folder in step 5, you will find "config.json". Open this with notepad or any plaintext editor of your choice.
-        - ```"VS_DailyMin": "7200000"``` - Define your daily VS score requirements here. If you have no daily VS requirements, set to "0".
-        - ```"VS_WeeklyMin": "0"``` - Define your weekly VS score requirements here. Leave at "0" if your alliance has daily VS requirements.
-        - ```"TD_WeeklyMin": "20000"``` - Define your weekly alliance tech donation requirements here.
+          ```
+          "Alliance": {                    
+            "RosterName": "roster.csv", <-- The name of your roster file in config
+            "VS_DailyMin": "7200000",   <-- Daily VS score requirements. If no daily VS requirements, set to "0".
+            "VS_WeeklyMin": "0",        <-- Weekly VS score requirements. Leave at "0" if alliance has daily VS requirements.
+            "TD_WeeklyMin": "20000"     <-- Weekly alliance tech donation requirements.
+          },
+          ```
 
-  - Specify your languages
-      - ```"Languages": "eng+kor"```
-          - The OCR will read your player names faster and more accurately if you limit the amount of languages it looks for. Alternatively, you may need to add additional languages. Some language options are as follows:
-               * ara = Arabic
-               * chi_sim = Chinese (simplified)
-               * eng = English
-               * jpn = Japanese
-               * kor = Korean
-               * rus = Russian\Slavic
-               * tha = Thai
-              - You can download more from: https://github.com/tesseract-ocr/tessdata_best. Be sure to add any traineddata you download to your tessdata folder.
+      - Specify your languages
+        ```
+        "ImageProcessing": {
+            "Languages": "eng+kor"  <-- Default languages are English and Korean
+          },
+        ```
+          The OCR will read your player names faster and more accurately if you limit the amount of languages it looks for. Alternatively, you may need to add additional languages. Some language options are as follows:
+           * ara = Arabic
+           * chi_sim = Chinese (simplified)
+           * eng = English
+           * jpn = Japanese
+           * kor = Korean
+           * rus = Russian\Slavic
+           * tha = Thai
+          - You can download more from: https://github.com/tesseract-ocr/tessdata_best. Be sure to add any traineddata you download to your tessdata folder.
 
-  - Configure your ADB settings if using automatic screenshot capture. Skip if not.
-      - ```"Emulator": "Bluestacks"```
-          - If you're using Bluestacks for automatic screenshots, leave on the default setting. If not, delete the word Bluestacks by setting it to "Emulator": ""
-      - ```"Device": "127.0.0.1:5555"```
-          - Ensure the IP and port you noted while enabling USB debugging is set here. This should already work with the default settings in BlueStacks.
+  - If using auto mode: Configure your ADB settings. Skip if not.
+    ```
+    "ADB": {
+        "Enabled": 1,                    <-- If using PC client to manually capture screenshots, set this to 0.
+        "Emulator": "Bluestacks",        <-- Leave at default for BlueStacks. Set to "Emulator": "" if connecting to phone/tablet.
+        "EmulatorExe": "HD-Player.exe",  <-- Executable to launch emulator in auto mode.
+        "Device": "127.0.0.1:5555",      <-- IP and port for ADB to connect to. Should work with default Bluestacks settings.
+        "Package": "com.fun.lastwar.gp", <-- Android package name to lauunch.
+        "VsSwipeDistance": "457",        <-- Define how far to scroll VS daily scoreboard in auto mode
+        "VsWklySwipeDistance": "443",    <-- Define how far to scroll VS weekly scoreboard in auto mode
+        "TdSwipeDistance": "450"         <-- Define how far to scroll tech donation and kill score scoreboards in auto mode
+      },
+    ```
 
-- Configure your Google Sheets settings if using the script to automatically export to that. Skip if not.
-    - ```"Enabled": 0```
-          - Set to 1 to enable. Leave at 0 to disable.
-    - ```"Account": "Service account email needed ONLY if using a .p12 certificate"```
-          - Windows PowerShell 5.1 users will require a service account email set here. PowerShell 7+ users can skip this setting if using a .json certificate.
-    - ```"CertFile": "Add the filename of your .json or .p12 certificate here"```
-          - Windows PowerShell 5.1 users will require a .p12 certificate. PowerShell 7+ users may use either certificate type.
-    - ```"SpreadsheetID": "Add your spreadsheet ID here"```
-          - Look at the URL of your spreadsheet. The ID is between https://docs.google.com/spreadsheets/d/ and the /edit?gid= part of your URL.
-    - ```"SheetName": "Add your sheet name here"```
-          - Add the name of your sheet (from the name of the desired tab at the bottom of your spreadsheet)
-    - ```VS, TD, and KS cells```
-          - These define where in the sheet the results from each report should start at. The report is always 4 columns wide so be sure not to overwrite by letting them overlap.
+- If using manual mode with the PC client:
+  ```
+  "PC": {
+    "Enabled": 0,               <-- If using PC client to manually capture screenshots, set this to 1.
+    "ProcessName": "LastWar",   <-- Process name of game as Windows sees it.
+    "LaunchExe": "Launch.exe",  <-- Name of executable to launch game.
+    "WindowWidth": "720",       <-- Enforced width of the PC client game window.
+    "WindowHeight": "1280"      <-- Enforced height of the PC client game window.
+  },
+  ```
+
+- If you want the report sent to Google Sheets, configure this section.
+  ```
+  "GoogleSheets": {
+    "Enabled": 0,         <-- If exporting reports to Google Sheets, set this to 1.
+    "Account": "",        <-- Service account email needed ONLY if using a .p12 certificate. .p12 required for PowerShell 5.1 users.
+    "CertFile": "",       <-- Add the filename of your .json or .p12 certificate here
+    "SpreadsheetID": "",  <-- Add your spreadsheet ID here. The ID is between https://docs.google.com/spreadsheets/d/ and the /edit?gid= part of your URL.
+    "SheetName": "",      <-- Add your sheet name here
+    "VS_Day1Cell": "A2",  <-- Set where VS Day 1 report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
+    "VS_Day2Cell": "E2",  <-- Set where VS Day 2 report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
+    "VS_Day3Cell": "I2",  <-- Set where VS Day 3 report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
+    "VS_Day4Cell": "M2",  <-- Set where VS Day 4 report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
+    "VS_Day5Cell": "Q2",  <-- Set where VS Day 5 report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
+    "VS_Day6Cell": "U2",  <-- Set where VS Day 6 report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
+    "VS_WeeklyCell": "",  <-- Set where VS weekly report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
+    "TD_Cell": "Y2",      <-- Set where Tech Donation report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
+    "KS_Cell": "AC2"      <-- Set where Kill Score report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
+  },
+  ```
 
 7. Note how many ranks with players can fit in your scoreboard UNOBSTRUCTED at any given time. This will be your PPS used in the next step.
     - For BlueStacks at the recommended 1080x1920 resolution, that should be 5 players
