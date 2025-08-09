@@ -113,50 +113,50 @@ Some work will be needed to get everything setup initially. After finishing setu
            * tha = Thai
           - You can download more from: https://github.com/tesseract-ocr/tessdata_best. Be sure to add any traineddata you download to your tessdata folder.
 
-  - If using auto mode: Configure your ADB settings. Skip if not.
-    ```
-    "ADB": {
-        "Enabled": 1,                    <-- If using PC client to manually capture screenshots, set this to 0.
-        "Emulator": "Bluestacks",        <-- Leave at default for BlueStacks. Set to "Emulator": "" if connecting to phone/tablet.
-        "EmulatorExe": "HD-Player.exe",  <-- Executable to launch emulator in auto mode.
-        "Device": "127.0.0.1:5555",      <-- IP and port for ADB to connect to. Should work with default Bluestacks settings.
-        "Package": "com.fun.lastwar.gp", <-- Android package name to lauunch.
-        "VsSwipeDistance": "457",        <-- Define how far to scroll VS daily scoreboard in auto mode
-        "VsWklySwipeDistance": "443",    <-- Define how far to scroll VS weekly scoreboard in auto mode
-        "TdSwipeDistance": "450"         <-- Define how far to scroll tech donation and kill score scoreboards in auto mode
-      },
-    ```
+      - If using auto mode: Configure your ADB settings. Skip if not.
+        ```
+        "ADB": {
+            "Enabled": 1,                    <-- If using PC client to manually capture screenshots, set this to 0.
+            "Emulator": "Bluestacks",        <-- Leave at default for BlueStacks. Set to "Emulator": "" if connecting to phone/tablet.
+            "EmulatorExe": "HD-Player.exe",  <-- Executable to launch emulator in auto mode.
+            "Device": "127.0.0.1:5555",      <-- IP and port for ADB to connect to. Should work with default Bluestacks settings.
+            "Package": "com.fun.lastwar.gp", <-- Android package name to lauunch.
+            "VsSwipeDistance": "457",        <-- Define how far to scroll VS daily scoreboard in auto mode
+            "VsWklySwipeDistance": "443",    <-- Define how far to scroll VS weekly scoreboard in auto mode
+            "TdSwipeDistance": "450"         <-- Define how far to scroll tech donation and kill score scoreboards in auto mode
+          },
+        ```
 
-- If using manual mode with the PC client:
-  ```
-  "PC": {
-    "Enabled": 0,               <-- If using PC client to manually capture screenshots, set this to 1.
-    "ProcessName": "LastWar",   <-- Process name of game as Windows sees it.
-    "LaunchExe": "Launch.exe",  <-- Name of executable to launch game.
-    "WindowWidth": "720",       <-- Enforced width of the PC client game window.
-    "WindowHeight": "1280"      <-- Enforced height of the PC client game window.
-  },
-  ```
-
-- If you want the report sent to Google Sheets, configure this section.
-  ```
-  "GoogleSheets": {
-    "Enabled": 0,         <-- If exporting reports to Google Sheets, set this to 1.
-    "Account": "",        <-- Service account email needed ONLY if using a .p12 certificate. .p12 required for PowerShell 5.1 users.
-    "CertFile": "",       <-- Add the filename of your .json or .p12 certificate here
-    "SpreadsheetID": "",  <-- Add your spreadsheet ID here. The ID is between https://docs.google.com/spreadsheets/d/ and the /edit?gid= part of your URL.
-    "SheetName": "",      <-- Add your sheet name here
-    "VS_Day1Cell": "A2",  <-- Set where VS Day 1 report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
-    "VS_Day2Cell": "E2",  <-- Set where VS Day 2 report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
-    "VS_Day3Cell": "I2",  <-- Set where VS Day 3 report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
-    "VS_Day4Cell": "M2",  <-- Set where VS Day 4 report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
-    "VS_Day5Cell": "Q2",  <-- Set where VS Day 5 report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
-    "VS_Day6Cell": "U2",  <-- Set where VS Day 6 report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
-    "VS_WeeklyCell": "",  <-- Set where VS weekly report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
-    "TD_Cell": "Y2",      <-- Set where Tech Donation report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
-    "KS_Cell": "AC2"      <-- Set where Kill Score report should start. Report is always 4 columns wide so be sure not to overwrite by letting them overlap.
-  },
-  ```
+        - If using manual mode with the PC client:
+          ```
+          "PC": {
+            "Enabled": 0,               <-- If using PC client to manually capture screenshots, set this to 1.
+            "ProcessName": "LastWar",   <-- Process name of game as Windows sees it.
+            "LaunchExe": "Launch.exe",  <-- Name of executable to launch game.
+            "WindowWidth": "720",       <-- Enforced width of the PC client game window.
+            "WindowHeight": "1280"      <-- Enforced height of the PC client game window.
+          },
+          ```
+    
+        - If you want the report sent to Google Sheets, configure this section.
+          ```
+          "GoogleSheets": {
+            "Enabled": 0,         <-- If exporting reports to Google Sheets, set this to 1.
+            "Account": "",        <-- Service account email needed ONLY if using a .p12 certificate. .p12 required for PowerShell 5.1 users.
+            "CertFile": "",       <-- Add the filename of your .json or .p12 certificate here
+            "SpreadsheetID": "",  <-- Add your spreadsheet ID here. ID is between https://docs.google.com/spreadsheets/d/ and the /edit?gid= part of your URL.
+            "SheetName": "",      <-- Add your sheet name here
+            "VS_Day1Cell": "A2",  <-- Set where VS Day 1 report should start. Always 4 columns wide.
+            "VS_Day2Cell": "E2",  <-- Set where VS Day 2 report should start. Always 4 columns wide.
+            "VS_Day3Cell": "I2",  <-- Set where VS Day 3 report should start. Always 4 columns wide.
+            "VS_Day4Cell": "M2",  <-- Set where VS Day 4 report should start. Always 4 columns wide.
+            "VS_Day5Cell": "Q2",  <-- Set where VS Day 5 report should start. Always 4 columns wide.
+            "VS_Day6Cell": "U2",  <-- Set where VS Day 6 report should start. Always 4 columns wide.
+            "VS_WeeklyCell": "",  <-- Set where VS weekly report should start. Always 4 columns wide.
+            "TD_Cell": "Y2",      <-- Set where Tech Donation report should start. Always 4 columns wide.
+            "KS_Cell": "AC2"      <-- Set where Kill Score report should start. Always 4 columns wide.
+          },
+          ```
 
 7. Note how many ranks with players can fit in your scoreboard UNOBSTRUCTED at any given time. This will be your PPS used in the next step.
     - For BlueStacks at the recommended 1080x1920 resolution, that should be 5 players
