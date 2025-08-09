@@ -225,138 +225,206 @@ param (
         } while ($counter -le $loopCount)
     }
 
-if ($Manual) {
-    explorer.exe $SavePath
-    :mainLoop while ($true) {
-        $counter = 1  # reset counter at start of day
-        for ($i = 1; $i -le $PlayerCount; $i += $PPS) {
-            $startRank = $i
-            $endRank   = [math]::Min($i + $PPS - 1, $PlayerCount)
+    if ($Manual) {
+        :mainLoop while ($true) {
+            $counter = 1  # reset counter at start of day
+            for ($i = 1; $i -le $PlayerCount; $i += $PPS) {
+                $startRank = $i
+                $endRank   = [math]::Min($i + $PPS - 1, $PlayerCount)
 
-            $TripleDigit = $counter.ToString('D3')
-            $FileName    = "$SaveName`_$TripleDigit.png"
+                $TripleDigit = $counter.ToString('D3')
+                $FileName    = "$SaveName`_$TripleDigit.png"
 
-            if ($lastStartRank -notmatch '\d') { $lastStartRank = '' }
-            if ($lastEndRank -notmatch '\d') { $lastEndRank = 'N/A' }
+                if ($lastStartRank -notmatch '\d') { $lastStartRank = '' }
+                if ($lastEndRank -notmatch '\d') { $lastEndRank = 'N/A' }
 
-            $stopAll = $false
+                $stopAll = $false
 
-            :mainInputLoop while ($true) {
-                Clear-Host
-                if ($Type -eq 'VS' -and $Day) { $ScreenTitleType = "$Type Day $Day" }
-                else { $ScreenTitleType = "$Type" }
-                Write-Host "$ScreenTitleType Manual Screenshot Capture`n"
-                Write-Host "Last screenshot taken: $LastFileName"
-                Write-Host "Next screenshot to take: $FileName`n"
-                Write-Host "=================================================="
-                Write-Host "[1] Take screenshot of ranks " -NoNewLine; Write-Host "$startRank–$endRank" -ForegroundColor Cyan
-                Write-Host "[2] Retake screenshot of previous ranks " -NoNewLine; Write-Host "$lastStartRank-$lastEndRank" -ForegroundColor Yellow
-                Write-Host "[3] Stop taking screenshots"
-                Write-Host "[Q] Quit the script`n"
+                :mainInputLoop while ($true) {
+                    Clear-Host
+                    if ($Type -eq 'VS' -and $Day) { $ScreenTitleType = "$Type Day $Day" }
+                    else { $ScreenTitleType = "$Type" }
+                    Write-Host "$ScreenTitleType Manual Screenshot Capture`n"
+                    Write-Host "Last screenshot taken: $LastFileName"
+                    Write-Host "Next screenshot to take: $FileName`n"
+                    Write-Host "=================================================="
+                    Write-Host "[1] Take screenshot of ranks " -NoNewLine; Write-Host "$startRank–$endRank" -ForegroundColor Cyan
+                    Write-Host "[2] Retake screenshot of previous ranks " -NoNewLine; Write-Host "$lastStartRank-$lastEndRank" -ForegroundColor Yellow
+                    Write-Host "[3] Stop taking screenshots"
+                    Write-Host "[Q] Quit the script`n"
 
-                $choice = (Read-Host 'Enter an option from above').Trim().ToUpper()
+                    $choice = (Read-Host 'Enter an option from above').Trim().ToUpper()
 
-                if ($choice -notin '1','2','3','Q') {
-                    Write-Host "`nERROR: Invalid input`n" -ForegroundColor Red
-                    continue
-                }
+                    if ($choice -notin '1','2','3','Q') {
+                        Write-Host "`nERROR: Invalid input`n" -ForegroundColor Red
+                        continue
+                    }
 
-                if ($choice -eq '2') {
-                    Get-AdbScreenshot -SavePath $SavePath -SaveName $LastFileName
-                    continue
-                }
+                    if ($choice -eq '2') {
+                        if ($Config.ADB.Enabled -eq '1') { Get-AdbScreenshot -SavePath $SavePath -SaveName $LastFileName }
+                        if ($Config.PC.Enabled -eq '1') { Get-PcScreenshot -ProcessName $Config.PC.ProcessName -SavePath $SavePath -SaveName $LastFileName }
+                        continue
+                    }
 
-                if ($choice -eq '1') {
-                    Get-AdbScreenshot -SavePath $SavePath -SaveName $FileName
-                    
-                    $lastStartRank = $startRank
-                    $lastEndRank = $endRank
-                    $LastFileName = $FileName
-                    $counter++
+                    if ($choice -eq '1') {
+                        if ($Config.ADB.Enabled -eq '1') { Get-AdbScreenshot -SavePath $SavePath -SaveName $FileName }
+                        if ($Config.PC.Enabled -eq '1') { Get-PcScreenshot -ProcessName $Config.PC.ProcessName -SavePath $SavePath -SaveName $FileName }
+                        
+                        $lastStartRank = $startRank
+                        $lastEndRank = $endRank
+                        $LastFileName = $FileName
+                        $counter++
 
-                    if ($endRank -eq $PlayerCount) {
-                        while ($true) {
-                            Clear-Host
-                            if ($Type -eq 'VS' -and $Day) { $ScreenTitleType = "$Type Day $Day" }
-                            else { $ScreenTitleType = "$Type" }
-                            Write-Host "$ScreenTitleType Manual Screenshot Capture`n"
-                            Write-Host "Last screenshot taken: $LastFileName`n"
-                            Write-Host "Next screenshot to take: $FileName"
-                            Write-Host "=================================================="
-                            Write-Host "[1] Done taking screenshots"
-                            Write-Host "[2] Retake screenshot of previous $PPS ranks"
-                            Write-Host "[3] Retake ALL screenshots for $ScreenTitleType"
-                            Write-Host "[Q] Quit script`n"
+                        if ($endRank -eq $PlayerCount) {
+                            while ($true) {
+                                Clear-Host
+                                if ($Type -eq 'VS' -and $Day) { $ScreenTitleType = "$Type Day $Day" }
+                                else { $ScreenTitleType = "$Type" }
+                                Write-Host "$ScreenTitleType Manual Screenshot Capture`n"
+                                Write-Host "Last screenshot taken: $LastFileName`n"
+                                Write-Host "Next screenshot to take: $FileName"
+                                Write-Host "=================================================="
+                                Write-Host "[1] Done taking screenshots"
+                                Write-Host "[2] Retake screenshot of previous $PPS ranks"
+                                Write-Host "[3] Retake ALL screenshots for $ScreenTitleType"
+                                Write-Host "[Q] Quit script`n"
 
-                            $finalChoice = (Read-Host 'Enter an option from above').Trim().ToUpper()
+                                $finalChoice = (Read-Host 'Enter an option from above').Trim().ToUpper()
 
-                            switch ($finalChoice) {
-                                '1' {
-                                    $stopAll = $true
-                                    break
-                                }
-                                '2' {
-                                    Get-AdbScreenshot -SavePath $SavePath -SaveName $FileName
-                                }
-                                '3' {
-                                    Write-Host "`nRestarting all screenshots for Day $Day...`n"
-                                    continue mainLoop  # properly restarts the whole loop
-                                }
-                                'Q' {
-                                    exit
-                                }
-                                default {
-                                    Write-Host "`nERROR: Invalid input`n" -ForegroundColor Red
+                                switch ($finalChoice) {
+                                    '1' {
+                                        $stopAll = $true
+                                        break mainLoop
+                                    }
+                                    '2' {
+                                        if ($Config.ADB.Enabled -eq '1') { Get-AdbScreenshot -SavePath $SavePath -SaveName $FileName }
+                                        if ($Config.PC.Enabled -eq '1') { Get-PcScreenshot -ProcessName $Config.PC.ProcessName -SavePath $SavePath -SaveName $FileName }
+                                    }
+                                    '3' {
+                                        Write-Host "`nRestarting all screenshots for Day $Day...`n"
+                                        continue mainLoop  # properly restarts the whole loop
+                                    }
+                                    'Q' {
+                                        exit
+                                    }
+                                    default {
+                                        Write-Host "`nERROR: Invalid input`n" -ForegroundColor Red
+                                    }
                                 }
                             }
                         }
                     }
+                    elseif ($choice -eq '3') {
+                        $stopAll = $true
+                    }
+                    elseif ($choice -eq 'Q') {
+                        exit
+                    }
+                    break mainInputLoop
                 }
-                elseif ($choice -eq '3') {
-                    $stopAll = $true
+                if ($stopAll) {
+                    break
                 }
-                elseif ($choice -eq 'Q') {
-                    exit
-                }
-                break mainInputLoop
             }
-
-            if ($stopAll) {
-                break
-            }
+            break  # exits the outer `while ($true)` after full successful run
         }
-
-        break  # exits the outer `while ($true)` after full successful run
     }
 }
-}
 
-Function Invoke-ResizeTemplate {
-param (
-    [string]$InputImg,
-    [string]$OutputImg,
-    [string]$SourceImg,
-    [int]$TargetWidth = 0,
-    [int]$TargetHeight = 0
+function Invoke-ResizeTemplate {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)] [string]$InputImg,
+        [Parameter(Mandatory=$true)] [string]$OutputImg,
+        [Parameter(Mandatory=$true)] [string]$SourceImg,
+
+        # Pass scaled dimensions explicitly
+        [int]$TargetWidth = 0,
+        [int]$TargetHeight = 0,
+
+        # Future revision: If we can measure a UI element (the score bar for each rank), we'll pass it here in pixels.
+        [int]$BarWidthOverride = 0,
+
+        # Perform quick tweaks for finding optimal template size.
+        [int]$LowResBias = 0
     )
 
-    $objName = $inputImg.Split('\')[-1]
+    # Ensure output directory
+    $OutputPath = Split-Path $OutputImg -Parent
+    if (-not (Test-Path -LiteralPath $OutputPath)) {
+        [void](New-Item -ItemType Directory -Path $OutputPath)
+    }
 
-    #If the output directory does not exist, create it
-    $OutputPath  = Split-Path $OutputImg -Parent
-    If (!(Test-Path -Path $OutputPath)) { New-Item -ItemType Directory -Path $OutputPath }
-
-    # Get template dimensions
+    # Load template dims
     $img = [System.Drawing.Image]::FromFile($InputImg)
-    [int]$TemplateWidth = $img.Width
-    [int]$TemplateHeight = $img.Height
+    $TemplateWidth  = $img.Width
+    $TemplateHeight = $img.Height
     $img.Dispose()
 
-    # Get source image dimensions
+    # Load source dims
     $img = [System.Drawing.Image]::FromFile($SourceImg)
-    [int]$SourceWidth = $img.Width
-    #[int]$SourceHeight = $img.Height
+    $SrcW = $img.Width
+    $SrcH = $img.Height
     $img.Dispose()
+
+    function Get-BarRatio {
+        param([int]$Width, [int]$Height)
+
+        $short  = [Math]::Min($Width, $Height)
+        $long   = [Math]::Max($Width, $Height)
+        $aspect = [double]$long / $short
+
+        if ($Width -gt $Height) {
+            # Landscape safety
+            return 0.505
+        }
+        elseif ($aspect -le 1.52) {
+            # Tablet-like (e.g., 1668x2420 aspect ≈ 1.452) → 127
+            return 0.756
+        }
+        elseif ($aspect -lt 1.70) {
+            # Wide phones (e.g., 1200x1920 aspect 1.60) → 100
+            return 0.833
+        }
+        else {
+            # Tall phones — short-side bands for exact hits
+            if     ($short -le 735)  { return 0.900 }  # 720x1280 → 65
+            elseif ($short -le 820)  { return 0.875 }  # 742x1391 → 65
+            elseif ($short -le 1120) { return 0.922 }  # 1008→93, 1080→100
+            elseif ($short -le 1180) { return 0.930 }  # 1179→110
+            elseif ($short -le 1330) { return 0.930 }  # 1290→120, 1320→123
+            else                      { return 0.930 }  # conservative default
+        }
+    }
+
+    $shortSide = [Math]::Min($SrcW, $SrcH)
+    $ratio = $null
+
+    # Estimate UI element width
+    [double]$barWidth =
+        if ($BarWidthOverride -gt 0) {
+            $ratio = [double]::NaN
+            [double]$BarWidthOverride
+        } else {
+            $ratio = Get-BarRatio -Width $SrcW -Height $SrcH
+            [double]$shortSide * $ratio
+        }
+
+    # Determine target dimensions using Ceiling to “round up”
+    if ($TargetWidth -eq 0 -and $TargetHeight -eq 0) {
+        $TargetWidth  = [int][Math]::Ceiling($barWidth / 10.0) + $LowResBias
+        $TargetHeight = $TargetWidth
+    }
+    elseif ($TargetWidth -gt 0 -and $TargetHeight -eq 0) {
+        $TargetHeight = [int][Math]::Ceiling($TargetWidth * ($TemplateHeight / [double]$TemplateWidth))
+    }
+    elseif ($TargetHeight -gt 0 -and $TargetWidth -eq 0) {
+        $TargetWidth = [int][Math]::Ceiling($TargetHeight * ($TemplateWidth / [double]$TemplateHeight))
+    }
+
+    # Clamp to sensible bounds
+    $TargetWidth  = [Math]::Max(30, [Math]::Min(200, $TargetWidth))
+    $TargetHeight = [Math]::Max(30, [Math]::Min(200, $TargetHeight))
 
     # Get scaled  template dimensions if exists
     if (Test-Path -Path $OutputImg) {
@@ -366,31 +434,17 @@ param (
         $img.Dispose()
         }
 
-    # Dynamically determine the reference base width
-    $baseWidth = switch ($SourceWidth) {
-        #{ $_ -lt 800 }     { 1065; break }
-        { $_ -lt 1300 }    { 1070; break }
-        { $_ -lt 1600 }    { 1075; break }
-        { $_ -lt 1900 }    { 1300; break }
-        { $_ -lt 2200 }    { 1400; break }
-        { $_ -lt 2500 }    { 3350; break }
-        default            { 1100 } # fallback
-    }
-
-    # Allow override if explicit dimensions are passed
-    if (($TargetWidth -eq 0) -and ($TargetHeight -eq 0)) {
-        $scaleFactor = $SourceWidth / $baseWidth
-        $TargetWidth = [math]::Round($TemplateWidth * $scaleFactor)
-        $TargetHeight = [math]::Round($TemplateHeight * $scaleFactor)
-    }
-
     # Only scale the templates if a suitable scaled template does not exist
     if ($TargetWidth -ne $ScaledTemplateWidth) {
-        Write-Host "Scaling template $objName to ${TargetWidth}x${TargetHeight}"
-        & $magick "$InputImg" -resize "${TargetWidth}x${TargetHeight}!" "$OutputImg"
+        # Perform the scaling
+        $objName = Split-Path $InputImg -Leaf
+        $computedUnits = $barWidth / 10.0
+        Write-Host ("Scaling template {0} -> {1}x{2} (Source: {3}x{4})" -f `
+            $objName, $TargetWidth, $TargetHeight, $SrcW, $SrcH)
+
+        & $Magick "$InputImg" -resize "${TargetWidth}x${TargetHeight}!" "$OutputImg"
     }
 }
-
 
 Function Get-ResolutionConfig {
 param (
@@ -435,7 +489,6 @@ param (
     Write-Warning "No suitable fallback found. Using defaults."
     return $defaults
 }
-
 
 Function Get-Coords {
     param (
@@ -745,6 +798,5 @@ param (
         } -ArgumentList $Jobs -MaxThreads $Config.Core.Threads -JobName 'Preprocess Images'
     }
 }
-
 
 Export-ModuleMember -Function *
