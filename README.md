@@ -1,6 +1,6 @@
 <a href="https://buymeacoffee.com/alargeraccoon" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
-If you find this tool helpful, please consider making a donation buy buying me a coffee!
+If you find this tool helpful, please consider making a donation by buying me a coffee!
 
 # Last War Score Tracker
 Gets scoreboard data from screenshots and writes to text (csv) for use with Excel or Google Sheets. Supports VS (Alliance Duel), TD (Alliance Tech Donations), 
