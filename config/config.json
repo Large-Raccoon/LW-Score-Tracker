@@ -1,0 +1,53 @@
+{
+  "Alliance": {
+    "RosterName": "roster.csv",
+    "VS_DailyMin": "7200000",
+    "VS_WeeklyMin": "0",
+    "TD_WeeklyMin": "20000"
+  },
+  "ImageProcessing": {
+    "Languages": "eng+kor"
+  },
+  "ADB": {
+    "Enabled": 1,
+    "Emulator": "Bluestacks",
+    "EmulatorExe": "HD-Player.exe",
+    "Device": "127.0.0.1:5555",
+    "Package": "com.fun.lastwar.gp",
+    "VsSwipeDistance": "457",
+    "VsWklySwipeDistance": "443",
+    "TdSwipeDistance": "450"
+  },
+  "PC": {
+    "Enabled": 0,
+    "ProcessName": "LastWar",
+    "LaunchExe": "Launch.exe",
+    "WindowWidth": "720",
+    "WindowHeight": "1280"
+  },
+  "Core": {
+    "Threads": 6,
+    "Cv2Thresh": 0.94,
+    "Cv2Script": "Get-ImageCoords.py",
+    "Cv2Debug": 0
+  },
+  "GoogleSheets": {
+    "Enabled": 0,
+    "Account": "Service account email needed ONLY if using a .p12 certificate",
+    "CertFile": "Add the filename of your .json or .p12 certificate here",
+    "SpreadsheetID": "Add your spreadsheet ID here",
+    "SheetName": "Add your sheet name here",
+    "VS_Day1Cell": "A2",
+    "VS_Day2Cell": "E2",
+    "VS_Day3Cell": "I2",
+    "VS_Day4Cell": "M2",
+    "VS_Day5Cell": "Q2",
+    "VS_Day6Cell": "U2",
+    "VS_WeeklyCell": "",
+    "TD_Cell": "Y2",
+    "KS_Cell": "AC2"
+  },
+  "NameCorrection": {
+    "MaxDistance": 5
+  }
+}
