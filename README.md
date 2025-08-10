@@ -86,8 +86,8 @@ Some work will be needed to get everything setup initially. After finishing setu
     - Save your updated roster.csv (make sure to keep it in the same config folder)
 
 6. config.json
-    - Set your score requirements
-        - From the same config folder in step 5, you will find "config.json". Open this with notepad or any plaintext editor of your choice.
+    - From the same config folder in step 5, you will find "config.json". Open this with notepad or any plaintext editor of your choice.
+        - Set your score requirements:
           ```
           "Alliance": {                    
             "RosterName": "roster.csv", <-- The name of your roster file in config
@@ -97,7 +97,7 @@ Some work will be needed to get everything setup initially. After finishing setu
           },
           ```
 
-      - Specify your languages
+      - Specify your languages:
         ```
         "ImageProcessing": {
             "Languages": "eng+kor"  <-- Default languages are English and Korean
@@ -113,7 +113,7 @@ Some work will be needed to get everything setup initially. After finishing setu
            * tha = Thai
           - You can download more from: https://github.com/tesseract-ocr/tessdata_best. Be sure to add any traineddata you download to your tessdata folder.
 
-      - If using auto mode: Configure your ADB settings. Skip if not.
+      - If using auto mode: Configure your ADB settings:
         ```
         "ADB": {
             "Enabled": 1,                    <-- If using PC client to manually capture screenshots, set this to 0.
