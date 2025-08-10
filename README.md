@@ -256,4 +256,12 @@ Some work will be needed to get everything setup initially. After finishing setu
     ```
     .\LW-ScoreTracker.ps1 -Mode KS -PPS 5 -Mode Auto
     ```
-
+    
+## Troubleshooting
+- Scoreboard is scrolling too far or not far enough
+    - Open up your config.json and modify the following settings as needed:
+      ```
+      "VsSwipeDistance": "457",      <-- VS daily scrolling. Lower to scroll further down. Raise to scroll further up.
+      "VsWklySwipeDistance": "443",  <-- VS weekly scrolling. Lower to scroll further down. Raise to scroll further up.
+      "TdSwipeDistance": "450"       <-- TD and KS scrolling. Lower to scroll further down. Raise to scroll further up.
+      ```
