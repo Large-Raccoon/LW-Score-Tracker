@@ -229,32 +229,32 @@ Some work will be needed to get everything setup initially. After finishing setu
 - Examples
     - Get VS scores from days 1-4 with automatic screenshot capture:
     ```
-    .\LW-ScoreTracker.ps1 -Mode VS -Day 1,2,3,4 -PPS 5 -Mode Auto
+    .\LW-ScoreTracker.ps1 -Type VS -Day 1,2,3,4 -PPS 5 -Mode Auto
     ```
     
     - Get VS scores from days 1-4 and take screenshots manually:
     ```
-    .\LW-ScoreTracker.ps1 -Mode VS -Day 1,2,3,4 -PPS 5 -Mode Manual
+    .\LW-ScoreTracker.ps1 -Type VS -Day 1,2,3,4 -PPS 5 -Mode Manual
     ```
    
     - Get VS scores from days 1-4 with imported screenshots:
     ```
-    .\LW-ScoreTracker.ps1 -Mode VS -Day 1,2,3,4 -PPS 5 -Mode Manual
+    .\LW-ScoreTracker.ps1 -Type VS -Day 1,2,3,4 -PPS 5 -Mode Manual
     ```
     
     - Get VS scores when your alliance has weekly score requirements with automatic screenshot capture:
     ```
-    .\LW-ScoreTracker.ps1 -Mode VS -PPS 5 -Mode Manual
+    .\LW-ScoreTracker.ps1 -Type VS -PPS 5 -Mode Manual
     ```
     
     - Get weekly tech donation scores with automatic screenshot capture:
     ```
-    .\LW-ScoreTracker.ps1 -Mode TD -PPS 5 -Mode Auto
+    .\LW-ScoreTracker.ps1 -Type TD -PPS 5 -Mode Auto
     ```
     
     - Get kill scores with automatic screenshot capture:
     ```
-    .\LW-ScoreTracker.ps1 -Mode KS -PPS 5 -Mode Auto
+    .\LW-ScoreTracker.ps1 -Type KS -PPS 5 -Mode Auto
     ```
     
 ## Troubleshooting
