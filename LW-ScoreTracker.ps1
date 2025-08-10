@@ -55,6 +55,7 @@ Get kill scores with automatic screenshot capture:
 .\LW-ScoreTracker.ps1 -Type KS -PPS 5 -Mode Auto
 
 .NOTES
+Version 1.3 - August 9th, 2025 - Corrected issue where PC client did not resize if already running.
 Version 1.2 - August 8th, 2025 - Added PC client support in manual mode. Enhanced template scaling logic.
 Version 1.1 - August 7th, 2025 - Added manual mode for guided screenshot support
 Version 1.0 - August 4th, 2025 - Initial release
@@ -618,11 +619,10 @@ if ($ManualMode) {
             & $PcClient
             Start-Sleep -Seconds 15
             Set-WindowSize -ProcessName $Config.PC.ProcessName -Width $Config.PC.WindowWidth -Height $Config.PC.WindowHeight
+        } Else {
+            Set-WindowSize -ProcessName $Config.PC.ProcessName -Width $Config.PC.WindowWidth -Height $Config.PC.WindowHeight
         }
     }
-
-    # If we made it here, we can safely import the navigation module.
-    #Import-Module "$modules\Navigation.psm1" -Force
 
     # Begin VS manual screenshot capture routine
     if ($Type -eq 'VS') {
