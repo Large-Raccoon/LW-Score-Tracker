@@ -780,9 +780,9 @@ param (
                         $playerName, '-geometry', '+40-10', '-composite',
 
                         # Move score down to the left
-                        '(', '-clone', '0', '-crop', '260x65+675+40', '+repage', '-write', $scoreName, '+delete', ')',
-                        '-fill', 'white', '-draw', 'rectangle 675,40 940,95',
-                        $scoreName, '-geometry', '+20+80', '-composite',
+                        '(', '-clone', '0', '-crop', '275x65+680+40', '+repage', '-write', $scoreName, '+delete', ')',
+                        '-fill', 'white', '-draw', 'rectangle 680,40 960,105',
+                        $scoreName, '-geometry', '+50+80', '-composite',
                         
                         # Remove transparency layer
                         '-background', 'white',
