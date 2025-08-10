@@ -70,7 +70,7 @@ Some work will be needed to get everything setup initially. After finishing setu
 3. Launch PowerShell (can be found in the Start Menu) then navigate to the path you extracted this repository into.
     - Example:
     ```
-    cd C:\LW-ScoreTracker
+    cd "C:\Last War\LW-Score-Tracker-main"
     ```
 
 4. Set your PowerShell execution policy to "Bypass" so it's easier to run scripts.
@@ -177,23 +177,23 @@ Some work will be needed to get everything setup initially. After finishing setu
 - Now run the script with ONE of these example commands. Remember to update your -PPS number if different:
     - Get VS Day 1 scores with 5 players per screenshot:
     ```
-    .\LW-ScoreTracker.ps1 -Mode VS -Day 1 -PPS 5 -Mode Auto
+    .\LW-ScoreTracker.ps1 -Type VS -Day 1 -PPS 5 -Mode Auto
     ```
     - Get VS weekly score with 5 players per screenshot:
     ```
-    .\LW-ScoreTracker.ps1 -Mode VS -PPS 5 -Mode Auto
+    .\LW-ScoreTracker.ps1 -Type VS -PPS 5 -Mode Auto
     ```
     - Get TD (Tech Donation) score with 5 players per screenshot:
     ```
-    .\LW-ScoreTracker.ps1 -Mode TD -PPS 5 -Mode Auto
+    .\LW-ScoreTracker.ps1 -Type TD -PPS 5 -Mode Auto
     ```
     - Get TD (Tech Donation) scores with screenshots you will manually take through the script.
     ```
-    .\LW-ScoreTracker.ps1 -Mode TD -PPS 5 -Mode Manual
+    .\LW-ScoreTracker.ps1 -Type TD -PPS 5 -Mode Manual
     ```
     - Get TD (Tech Donation) scores with imported screenshots.
     ```
-    .\LW-ScoreTracker.ps1 -Mode TD -PPS 5 -Mode Import
+    .\LW-ScoreTracker.ps1 -Type TD -PPS 5 -Mode Import
     ```
   
 9. Confirm that player names are being reported correctly.
