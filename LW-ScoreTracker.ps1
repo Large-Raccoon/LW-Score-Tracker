@@ -55,6 +55,7 @@ Get kill scores with automatic screenshot capture:
 .\LW-ScoreTracker.ps1 -Type KS -PPS 5 -Mode Auto
 
 .NOTES
+Version 1.4 - August 16th, 2025 - Corrected an issue where PC client screenshots were not cropping correctly in some cases.
 Version 1.3 - August 9th, 2025 - Corrected issue where PC client did not resize if already running.
 Version 1.2 - August 8th, 2025 - Added PC client support in manual mode. Enhanced template scaling logic.
 Version 1.1 - August 7th, 2025 - Added manual mode for guided screenshot support
@@ -156,11 +157,11 @@ $Logs = "$PSScriptRoot\logs"
 $import = "$PSScriptRoot\import"
 
 # --- Dynamic Configurations ---
-[int]$VsMinScore = if ($Config.Alliance.VS_DailyMin -ne '0') { $Config.Alliance.VS_DailyMin }
-                elseif ($Config.Alliance.VS_WeeklyMin -ne '0') { $Config.Alliance.VS_WeeklyMin }
+[int]$VsMinScore = if ($PSBoundParameters.ContainsKey('Day')) { $Config.Alliance.VS_DailyMin }
+                elseif (-not $PSBoundParameters.ContainsKey('Day')) { $Config.Alliance.VS_WeeklyMin }
                 else { '0' }
 
-[int]$TdMinScore = if ($Config.Alliance.TD_WeeklyMin -ne '0') { $Config.Alliance.TD_WeeklyMin }
+[int]$TdMinScore = $Config.Alliance.TD_WeeklyMin
 
 # Status info for the user
 Clear-Host
@@ -194,18 +195,28 @@ if (!(Test-Path "$import\TD" -EA SilentlyContinue)) { New-Item -ItemType Directo
 if (!(Test-Path "$import\VS" -EA SilentlyContinue)) { New-Item -ItemType Directory -Path "$import\VS" | Out-Null }
 
 # Informational variables for the header
-if ($AutoMode) { $ScreenshotSource = 'Auto'; [int]$StartDelay = 10; $ScriptStart = "in $StartDelay seconds" }
-if ($ManualMode) { $ScreenshotSource = 'Manual'; $ScriptStart = 'after continuing' }
-if ($ImportMode) { $ScreenshotSource = 'Import'; $ScriptStart = 'after continuing' }
+if ($AutoMode) { $HeaderMode = 'Auto'; [int]$StartDelay = 10; $ScriptStart = "in $StartDelay seconds" }
+if ($ManualMode) { $HeaderMode = 'Manual'; $ScriptStart = 'after continuing' }
+if ($ImportMode) { $HeaderMode = 'Import'; $ScriptStart = 'after continuing' }
 if ($null -eq $Day) { $HeaderDay = 'N/A' } else { $HeaderDay = $Day }
 if ($Type -eq 'VS') { [int]$HeaderScore = $VsMinScore }
 if ($Type -eq 'TD') { [int]$HeaderScore = $TdMinScore }
 if ($Type -eq 'VS' -and $Config.Alliance.VS_DailyMin -ne '0') { $ScoreFrequency = 'Daily' } else { $ScoreFrequency = 'Weekly' }
 if ($Type -eq 'TD' -and $Config.Alliance.TD_WeeklyMin -ne '0') { $ScoreFrequency = 'Weekly' }
 if ($Type -eq 'KS' -and $Config.Alliance.TD_WeeklyMin -ne '0') { $ScoreFrequency = 'N/A' }
+if ($AutoMode) { 
+    if ($Config.ADB.Enabled -eq 1) { $HeaderScreenSource = 'ADB (Android)' }
+    if ($Config.ADB.Enabled -eq 0) { $HeaderScreenSource = 'None (enable ADB in config.json)' }
+}
+if ($ManualMode) { 
+    if ($Config.ADB.Enabled -eq 1 -and $Config.PC.Enabled -eq 1) { $HeaderScreenSource = 'ERROR: You cannot enable both ADB and PC in config.json' }
+    if ($Config.ADB.Enabled -eq 0 -and $Config.PC.Enabled -eq 0) { $HeaderScreenSource = 'ERROR: Enable ADB or PC in config.json' }
+    if ($Config.ADB.Enabled -eq 1 -and $Config.PC.Enabled -eq 0) { $HeaderScreenSource = 'ADB (Android)' }
+    if ($Config.ADB.Enabled -eq 0 -and $Config.PC.Enabled -eq 1) { $HeaderScreenSource = 'PC Client' }
+}
+if ($ImportMode) { $HeaderScreenSource = 'Imported Screenshots' }
 
-
-# Format the score into an easy to read format.
+# Format the score into an easy to read format
 $HeaderScoreFormatted = "{0:N0}" -f $HeaderScore
 
 # Display the informational header
@@ -215,7 +226,8 @@ Write-Host @(
 ======================================
     --- Last War Score Tracker ---    
 ======================================
-Image Source: $ScreenshotSource
+Mode: $HeaderMode
+Source: $HeaderScreenSource
 Roster File: $($Config.Alliance.RosterName)
 Player Count: $($RosterData.Player.Count)
 
@@ -229,24 +241,11 @@ Press CTRL+C to cancel
 ======================================"
 )
 
-# Validate parameters and config.json
-if (($Type -eq 'VS') -and ($Config.Alliance.VS_DailyMin -ne '0') -and ($Config.Alliance.VS_WeeklyMin -ne '0')) {
-    Write-Host "ERROR: You cannot set both daily and weekly requirements in config.json." -ForegroundColor Red
-    Write-Host "Set VS_DailyMin or VS_WeeklyMin to 0 in config.json then try again."-ForegroundColor Magenta
-    exit
-}
-
-# Enforce $Day parameter if $Type is set to VS with VS_DailyMin greater than 0 in config.json
-if ($Type -eq 'VS' -and $Config.Alliance.VS_DailyMin -ne '0'-and -not $PSBoundParameters.ContainsKey('Day')) {
-    Write-Host "ERROR: Parameter -Day is required when using -Type VS with daily score requirements.`n" -ForegroundColor Red
-    exit
-}
-
 # Enforce -PPS parameter if -Auto was supplied
 if (($PPS -le '0' -or -not $PSBoundParameters.ContainsKey('PPS')) -and $Mode -eq 'Auto') {
     Write-Host "ERROR: Parameter -PPS with a valid number is required if -Mode Auto was supplied.`n" -ForegroundColor Red
-    Write-Host "To resolve, check how many ranks are clearly displayed without scrolling on your scoreboard." -ForegroundColor Red
-    Write-Host "Add the number after -PPS. Example: -PPS 5" -ForegroundColor Red
+    Write-Host "To resolve, check how many ranks are clearly displayed without scrolling on your scoreboard."
+    Write-Host "Add the number after -PPS. Example: -PPS 5`n"
     exit
 }
 
@@ -257,10 +256,18 @@ if ($RosterData.Player.Count -eq 0) {
 }
 
 # Ensure that ADB and PC are not simulatenously enabled.
-if (!($Import) -and $Config.ADB.Enabled -eq 1 -and $Config.PC.Enabled -eq 1) {
+if (!($ImportMode) -and $Config.ADB.Enabled -eq 1 -and $Config.PC.Enabled -eq 1) {
     Write-Host "ERROR: You cannot enable both ADB and PC at the same time in this mode.`n" -ForegroundColor Red
     Write-Host "To resolve, open your config.json and disable ADB (Android) or PC (PC Client)."
-    Write-Host "Find the corresponding `"Enabled`": 1 setting and change from 1 to 0."
+    Write-Host "Find the corresponding `"Enabled`": 1 setting and change from 1 to 0.`n"
+    exit
+}
+
+# Ensure that PC is not enabled if using -Mode Auto
+if (($AutoMode) -and $Config.ADB.Enabled -eq 0 -and $Config.PC.Enabled -eq 1) {
+    Write-Host "ERROR: -Mode Auto does not support use with PC client.`n" -ForegroundColor Red
+    Write-Host "To resolve, open your config.json and enable ADB (Android)."
+    Write-Host "Find the corresponding `"Enabled`": 1 setting and change from 1 to 0.`n"
     exit
 }
 
@@ -303,7 +310,6 @@ if ($ImportMode) {
                 }
         } Else {
             Write-Host "Status: Completed - No new $Type screenshot(s) detected.`n" -ForegroundColor Yellow
-            #if 
         }
     }
 
@@ -522,8 +528,8 @@ if ($AutoMode) {
             }
         }# end VS Day screenshot capture loop
 
-        # if VS_WeeklyMin in config.json is set to anything but 0, capture weekly scores.
-        if ($Config.Alliance.VS_WeeklyMin -ne '0') {
+        # If -Day parameter was not specified, capture weekly scores.
+        if (-not $PSBoundParameters.ContainsKey('Day')) {
             Select-Button -TemplateName 'VsWeekly.png' -BackupTemplate 'VsWeekly-EndOfVs.png'
             Try {
                 Get-Screenshots -SavePath "$screens\$Type" `
@@ -726,7 +732,7 @@ if ($ManualMode) {
         }
         
         # if VS_WeeklyMin in config.json is set to anything but 0, capture weekly scores.
-        if ($Config.Alliance.VS_WeeklyMin -ne '0') {
+        if (-not $PSBoundParameters.ContainsKey('Day')) {
             Try {
                 # Run manual screenshot loop.
                 Get-Screenshots -SavePath "$screens\$Type" `
@@ -744,21 +750,12 @@ if ($ManualMode) {
 
     # Begin TD (Tech Donations) screen capture loop
     if ($Type -eq 'TD') {
-        Select-Button -TemplateName 'Alliance.png'
-        Select-Button -TemplateName 'StrengthRanking.png'
-        Select-Button -TemplateName 'StrRnkDonate.png'
-        Select-Button -TemplateName 'StrRnkDonateWeekly.png'
-
         # Capture screenshots
         Get-Screenshots -SavePath "$screens\$Type" -SaveName $Type -Type $Type -Manual -PPS $PPS -PlayerCount $($RosterData.Player.Count)
     }# end TD (Tech Donations) screenshot capture loop
 
     # Begin KS (Kill Score) screen capture loop
     if ($Type -eq 'KS') {
-        Select-Button -TemplateName 'Alliance.png'
-        Select-Button -TemplateName 'StrengthRanking.png'
-        Select-Button -TemplateName 'StrRnkKills.png'
-
         # Capture screenshots
         Get-Screenshots -SavePath "$screens\$Type" -SaveName $Type -Type $Type -Manual -PPS $PPS -PlayerCount $($RosterData.Player.Count)
     }# end KS (Kill Score) screenshot capture loop
@@ -779,7 +776,7 @@ if ($Type -eq 'VS') {
     $CropJobs = $Jobs.CropJobs
     $PreprocJobs = $Jobs.PreprocJobs
     $ScreenshotLists = $Jobs.ScreenshotLists
-    
+
     # Execute the jobs we collected multithreaded
     Invoke-MTCropping -Jobs $CropJobs
     Invoke-MTPreprocessing -Jobs $PreprocJobs
@@ -869,7 +866,7 @@ foreach ($kvp in $ScreenshotLists.GetEnumerator() | Sort-Object Key) {
     # Define the starting cell of CSV data that will be exported to sheet
     if ($Config.GoogleSheets.Enabled -eq '1') {
         Write-Host "REPORT GENERATION: Export $NamePrefix report to Google Sheet" -ForegroundColor Cyan
-        
+
         # Import the Google Sheets module
         Import-Module "$modules\GoogleSheets.psm1" -Force
         
@@ -895,7 +892,7 @@ foreach ($kvp in $ScreenshotLists.GetEnumerator() | Sort-Object Key) {
             SpreadsheetID = $Config.GoogleSheets.SpreadsheetID
             SheetName     = $Config.GoogleSheets.SheetName
             StartCell     = $StartCell
-            EndCell       = (Get-EndCellFromStartCell -StartCell $StartCell -ColumnsToRight 3 -RowsToInclude 101)
+            EndCell       = (Get-EndCellFromStartCell -StartCell $StartCell -ColumnsToRight 3 -RowsToInclude 201)
             CertPath      = $CertPath
             }
 
