@@ -265,3 +265,6 @@ Some work will be needed to get everything setup initially. After finishing setu
       "VsWklySwipeDistance": "443",  <-- VS weekly scrolling. Lower to scroll further down. Raise to scroll further up.
       "TdSwipeDistance": "450"       <-- TD and KS scrolling. Lower to scroll further down. Raise to scroll further up.
       ```
+- A player name keeps failing to correct automatically
+    - Some fonts and character combinations don't work well with the OCR. In these cases, assign a nickname to the player in-game.
+    - If the nickname you gave does not match their player name in roster.csv, add it as an alias.
