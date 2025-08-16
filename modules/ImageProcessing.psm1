@@ -33,12 +33,10 @@ $TrainedData = (Get-ChildItem -Path $TessdataSource -Filter '*.traineddata').Nam
 ForEach ($File in $TrainedData) {
     $TessdataDestination = Join-Path $TessPath $File -EA SilentlyContinue
 
-    if (Test-Path $TessdataDestination -EA SilentlyContinue) {
-        $DestinationFileHash = Get-FileHash $TessdataDestination -Algorithm SHA256
-        $SourceFileHash = Get-FileHash (Join-Path $TessdataSource $File) -Algorithm SHA256
-        if ($SourceFileHash -ne $DestinationFileHash) {
-            Copy-Item -Path (Join-Path $TessdataSource $File) -Destination $TessdataDestination -Force
-        }
+    $DestinationFileHash = Get-FileHash $TessdataDestination -Algorithm SHA256
+    $SourceFileHash = Get-FileHash (Join-Path $TessdataSource $File) -Algorithm SHA256
+    if ($SourceFileHash -ne $DestinationFileHash) {
+        Copy-Item -Path (Join-Path $TessdataSource $File) -Destination $TessdataDestination -Force -EA SilentlyContinue
     }
 }
 
@@ -284,9 +282,9 @@ param (
                                 Write-Host "Last screenshot taken: $LastFileName`n"
                                 Write-Host "Next screenshot to take: $FileName"
                                 Write-Host "=================================================="
-                                Write-Host "[1] Done taking screenshots"
-                                Write-Host "[2] Retake screenshot of previous $PPS ranks"
-                                Write-Host "[3] Retake ALL screenshots for $ScreenTitleType"
+                                Write-Host "[1] Done taking screenshots" -ForegroundColor Cyan
+                                Write-Host "[2] Retake screenshot of previous $PPS ranks" -ForegroundColor Yellow
+                                Write-Host "[3] Retake ALL screenshots for $ScreenTitleType" -ForegroundColor Magenta
                                 Write-Host "[Q] Quit script`n"
 
                                 $finalChoice = (Read-Host 'Enter an option from above').Trim().ToUpper()
@@ -501,7 +499,7 @@ Function Get-Coords {
     $thresholdParam = "--threshold=$Cv2Thresh"
 
     # Form command line based on whether -thresh param was used or not.
-    if ($Config.Core.Cv2Debug -eq '1') {
+    if ($Config.Core.Debug -eq '1') {
         $params = @(
             $cv2,
             $refimg,
@@ -617,29 +615,33 @@ Function Use-ProcessImage {
     $ocrText = $process.StandardOutput.ReadToEnd()
     $process.WaitForExit()
 
-    <# For debugging only
-    Write-Host "OCR Text:"
-    $ocrText | Out-Host
-    Write-Host ""
-    #>
+
+    # For debugging only
+    if ($Config.Core.Debug -eq '1') {
+        Write-Host "OCR Text:"
+        $ocrText | Out-Host
+        Write-Host ""
+    }
 
     # Split and trim lines
     $lines = $ocrText -split "`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
 
-    If ($Type -eq 'VS') {
-        # Define score pattern (OCR friendly by allowing periods and long commas)
-        $scorePattern = '^\d{1,3}(?:[,\.\uFF0C\uFF0E\u00A0\u202F\s]\d{3})+$'
+    # Player is the first line
+    $playerLine = $lines | Select-Object -First 1
 
-        # Find the first line matching the score pattern
-        $scoreLine = $lines |
-            Where-Object { $_ -match $scorePattern } |
-            Select-Object -First 1
+    # Normalize the player name
+    $player = if ($playerLine) { ($playerLine -replace '[^\p{L}\p{N} ]', '').Trim() } else { "" }
+
+    If ($Type -eq 'VS') {
+        # Score is the second line
+        $scoreLine = $lines | Select-Object -Skip 1 -First 1
 
         # Replace periods and long commas with a comma, then strip everything but digits & commas
         if ($scoreLine) {
-            $score = $scoreLine `
-                -replace '[\.\uFF0C\uFF0E\u00A0\u202F\s]', ',' `
-                -replace '[^\d,]', ''
+        $score = ($scoreLine `
+            -replace '[\.\uFF0C\uFF0E\u00A0\u202F\s]', ',' `
+            -replace '[^\d,]', '' `
+            -replace '^,+|,+$', '') # Remove leading/trailing commas
         }
         else {
             $score = ''
@@ -647,17 +649,17 @@ Function Use-ProcessImage {
     }
 
     If ($Type -in @('TD', 'KS')) {
-        # Score is the first line that matches score format
-        $scorePattern = '^\d+$'
-
-        # Score is the first line that matches score format
-        $scoreLine = $lines | Where-Object { $_ -match $scorePattern } | Select-Object -First 1
-        $score = if ($scoreLine) { $scoreLine -replace '[^\d]', '' } else { "" }
+        # Score is the second line
+        $scoreLine = $lines | Select-Object -Skip 1 -First 1
+        
+        # Normalize the score by stripping everything but digits
+        if ($scoreLine) {
+            $score = if ($scoreLine) { $scoreLine -replace '[^\d]', '' } else { '' }
+        }
+        else {
+            $score = ''
+        }
     }
-
-    # Player is first line that does NOT match the score format
-    $playerLine = $lines | Where-Object { $_ -notmatch $scorePattern } | Select-Object -First 1
-    $player = if ($playerLine) { ($playerLine -replace '[^\p{L}\p{N} ]', '').Trim() } else { "" }
 
     # Define the rank
     $rank = if ($objName -match '(\d{3})\.png$') { [int]$matches[1] } else { 'N/A' }
@@ -731,10 +733,10 @@ param (
                         "$imgPath",
                         
                         # Resize, convert to grayscale, remove the pfp from image, artifically set DPI to 300, ease up the bold font
-                        '-resize', '945x175!',
+                        '-resize', '970x200!',
                         '-monochrome',
                         '-fill', 'white',
-                        '-draw', 'rectangle 0,80 550,550',
+                        '-draw', 'rectangle 0,100 550,550',
                         '-units', 'PixelsPerInch',
                         '-density', '300',
                         '-morphology', 'Dilate', 'Square:1',
@@ -746,9 +748,12 @@ param (
                         $scoreName, '-geometry', '+0+100', '-composite',
 
                         # Move player name to the right
-                        '(', '-clone', '0', '-crop', '600x100+0+0', '+repage', '-write', $playerName, '+delete', ')',
+                        '(', '-clone', '0', '-crop', '600x120+0+0', '+repage', '-write', $playerName, '+delete', ')',
                         '-fill', 'white', '-draw', 'rectangle 0,0 600,100',
                         $playerName, '-geometry', '+100+0', '-composite',
+                        
+                        # Chop off some excess white space from the image
+                        '-gravity','east','-chop','300x0'
 
                         # Remove transparency layer
                         '-background', 'white',
@@ -784,6 +789,9 @@ param (
                         '-fill', 'white', '-draw', 'rectangle 680,40 960,105',
                         $scoreName, '-geometry', '+50+80', '-composite',
                         
+                        # Chop off some excess white space from the image
+                        '-gravity','east','-chop','300x0'
+
                         # Remove transparency layer
                         '-background', 'white',
                         '-alpha', 'remove',

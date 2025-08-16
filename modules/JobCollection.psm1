@@ -26,7 +26,7 @@ param (
     [string]$scaledtemplates,
     [string]$screens,
     [string]$Preproc,
-    [array]$day,
+    [array]$Day,
     [int]$PPS,
     [string]$Type
     )
@@ -74,9 +74,9 @@ param (
         $ScreenshotLists = @{}
         
         # VS job collection for daily score requirements.
-        if ($Config.Alliance.VS_DailyMin -ne '0') {
+        if ($Null -ne $Day) {
             foreach ($i in 1..6) {
-                if ($day -contains "$i" -or $day -eq 'All') {
+                if ($Day -contains "$i" -or $Day -eq 'All') {
                     $ScreenshotLists["VS_Day$i"] = Get-ChildItem "$screens\VS" -Filter "VS_Day${i}_*" |
                         Sort-Object Name |
                         Where-Object { $_.FullName -notlike '*_debug.png' } |
@@ -85,7 +85,7 @@ param (
             }
         }
         # VS job collection for weekly score requirements.
-        if ($Config.Alliance.VS_WeeklyMin -ne '0') {
+        if ($null -eq $Day) {
             $ScreenshotLists["$Type"] = Get-ChildItem "$screens\$Type" -Filter "$Type_*" |
                 Sort-Object Name |
                 Where-Object { $_.FullName -notlike '*_debug.png' } |

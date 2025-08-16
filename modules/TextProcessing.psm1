@@ -136,13 +136,13 @@ For ❌, confirm player is in your roster.csv. Add invalid name as an alias if n
             # If no roster match, check for a matching alias to correct the OCR name.
             $aliasMatch = $RosterData |
             Where-Object {
-                ($usedNames -notcontains $_.Player) -and (
-                    (![string]::IsNullOrWhiteSpace($_.Alias1) -and $_.Alias1 -eq $originalName) -or
-                    (![string]::IsNullOrWhiteSpace($_.Alias2) -and $_.Alias2 -eq $originalName) -or
-                    (![string]::IsNullOrWhiteSpace($_.Alias3) -and $_.Alias3 -eq $originalName) -or
-                    (![string]::IsNullOrWhiteSpace($_.Alias4) -and $_.Alias4 -eq $originalName) -or
-                    (![string]::IsNullOrWhiteSpace($_.Alias5) -and $_.Alias5 -eq $originalName) -or
-                    (![string]::IsNullOrWhiteSpace($_.Alias6) -and $_.Alias6 -eq $originalName)
+                (
+                (![string]::IsNullOrWhiteSpace($_.Alias1) -and $_.Alias1 -eq $originalName) -or
+                (![string]::IsNullOrWhiteSpace($_.Alias2) -and $_.Alias2 -eq $originalName) -or
+                (![string]::IsNullOrWhiteSpace($_.Alias3) -and $_.Alias3 -eq $originalName) -or
+                (![string]::IsNullOrWhiteSpace($_.Alias4) -and $_.Alias4 -eq $originalName) -or
+                (![string]::IsNullOrWhiteSpace($_.Alias5) -and $_.Alias5 -eq $originalName) -or
+                (![string]::IsNullOrWhiteSpace($_.Alias6) -and $_.Alias6 -eq $originalName)
                 )
             } | Select-Object -First 1
 
@@ -196,6 +196,14 @@ For ❌, confirm player is in your roster.csv. Add invalid name as an alias if n
         }
         elseif ($updatedName) {
             $usedNames += $updatedName
+        }
+
+        # Final pass: remove any names not in roster after corrections
+        for ($i = 0; $i -lt $updatedReport.Count; $i++) {
+            $name = $updatedReport[$i].Player
+            if (![string]::IsNullOrWhiteSpace($name) -and ($RosterData.Player -notcontains $name)) {
+                $updatedReport[$i].Player = ''
+            }
         }
 
         # Update the report
