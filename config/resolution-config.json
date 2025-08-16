@@ -4,12 +4,8 @@
     "Height": 1280,
     "OffsetX": 140,
     "OffsetY": -50,
-	"RankRow_W": 455,
-	"RankRow_H": 100,
-	"Player_W": 0,
-	"Player_H": 0,
-	"Score_W": 0,
-	"Score_H": 0
+	"RankRow_W": 430,
+	"RankRow_H": 100
 	},
 	{
     "Width": 1080,
