@@ -55,6 +55,7 @@ Get kill scores with automatic screenshot capture:
 .\LW-ScoreTracker.ps1 -Type KS -PPS 5 -Mode Auto
 
 .NOTES
+Version 1.5 - December 6th, 2025 - Updated UI templates, navigation flow, and cropping parameters.
 Version 1.4 - August 16th, 2025 - Corrected an issue where PC client screenshots were not cropping correctly in some cases.
 Version 1.3 - August 9th, 2025 - Corrected issue where PC client did not resize if already running.
 Version 1.2 - August 8th, 2025 - Added PC client support in manual mode. Enhanced template scaling logic.
@@ -431,7 +432,7 @@ if ($AutoMode) {
         Get-ChildItem -Path "$screens\$Type" -File -Recurse | Remove-Item
 
         # Begin navigation
-        Select-Button -TemplateName 'VS.png'
+        Select-Button -TemplateName 'VS.png' -BackupTemplate 'VS_2.png'
         Select-Button -TemplateName 'VsPointsRanking.png'
         Select-Button -TemplateName 'YourAllianceCheckbox.png'
                 
